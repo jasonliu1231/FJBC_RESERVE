@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: "Fjbc Reserve",
-  description: "預定餐點",
+  description: "預定餐點系統 ",
 };
 
 export default function RootLayout({ children }) {
