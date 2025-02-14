@@ -8,7 +8,8 @@ export default async function handler(req, res) {
     SELECT 
         p.ProductName, 
         pcd.PackageComboDataID,
-        pcd.ComboName
+        pcd.ComboName,
+        pcd.ChooseMode
     FROM Products p
     LEFT JOIN PackageComboData pcd 
         ON pcd.PackageDataID = p.PackageDataID

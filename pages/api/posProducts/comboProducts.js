@@ -8,7 +8,9 @@ export default async function handler(req, res) {
     SELECT 
         p.ProductName,
         p.ProductID,
-        pcpr.PackageComboDataID
+        pcpr.PackageComboDataID,
+        pcpr.ChooseMode,
+        pcpr.DefaultItemAmount
     FROM PackageComboProductRelation pcpr
     INNER JOIN Products p
         ON pcpr.ProductID = p.ProductID
