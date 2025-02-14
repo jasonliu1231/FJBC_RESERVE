@@ -27,7 +27,7 @@ export default function Home() {
   const [choseCombo, setChoseCombo] = useState([])
 
   const [choseComboList, setChoseComboList] = useState()
-  const [choseComboProductList, setChoseComboProductList] = useState()
+  const [choseComboProductList, setChoseComboProductList] = useState([])
   const [choseTasteCategory, setChoseTasteCategory] = useState([])
   const [choseTasteList, setChoseTasteList] = useState([])
 
@@ -194,6 +194,7 @@ export default function Home() {
   }
 
   const read_comboProducts = (packageComboDataID, ComboName) => {
+    console.log(packageComboDataID, 123)
     fetchComboProducts(packageComboDataID)
     setChoseComboList({
       comboID: packageComboDataID,
@@ -204,11 +205,34 @@ export default function Home() {
     fetchProductTasteCategory(data.ProductID)
     fetchTasteName(data.ProductID)
 
-    setChoseComboProductList({
-      comboProductID: data.ProductID,
-      comboProductName: data.ProductName,
+    setChoseComboProductList(prevList => {
+      if (!data || !data.ProductID) return prevList
+      const isExist = prevList.some(
+        item => item.comboProductID === data.ProductID
+      )
+      DefaultItemAmount
+      // 2: 必選
+      if (data.ChooseMode == 2) {
+        return {
+          comboProductID: data.ProductID,
+          comboProductName: data.ProductName,
+        }
+      } else if (data.ChooseMode == 1) {
+        if (isExist) {
+          return prevList.filter(item => item.comboProductID !== data.ProductID)
+        } else {
+          return [
+            ...prevList,
+            {
+              comboProductID: data.ProductID,
+              comboProductName: data.ProductName,
+            },
+          ]
+        }
+      }
     })
   }
+  console.log(choseComboProductList, 789)
 
   const str_split = str_value => {
     // 判斷是否必填，因資料只能判斷名稱開頭是否有 '●' ->(為必填) 所以才能以此判斷
@@ -646,7 +670,7 @@ export default function Home() {
                     </div>
                     <div className="w-full py-2 flex gap-2">
                       <div className="w-1/2">
-                        <p>預約日期:</p>
+                        <p>預約日期1:</p>
                         <p className="text-teal-200">{reserveDate}</p>
                       </div>
 
@@ -835,74 +859,67 @@ export default function Home() {
                                 <div className="mt-10">
                                   {isTasteClicked ? (
                                     <div>
-                                      <div>
-                                        <button
-                                          className=" w-auto text-white b p-2 ml-2 border-b-2 border-b-white "
-                                          onClick={closeTaste}
-                                        >
-                                          ← 返回
-                                        </button>
-                                        <div className="mt-4">
-                                          {tasteCategoryList.map(
-                                            (item, index) => (
-                                              <div key={index}>
-                                                <div className="text-2xl py-2 text-rose-300 flex">
-                                                  <div>
-                                                    {item.TasteCategoryName}
-                                                  </div>
-                                                  {str_split(
-                                                    item.TasteCategoryName
-                                                  ) && (
-                                                    <div className="flex justify-center items-center">
-                                                      <p className="text-sm text-red-500 px-2">
-                                                        (必填)
-                                                      </p>
-                                                    </div>
-                                                  )}
+                                      <button
+                                        className=" w-auto text-white b p-2 ml-2 border-b-2 border-b-white "
+                                        onClick={closeTaste}
+                                      >
+                                        ← 返回
+                                      </button>
+                                      <div className="mt-4">
+                                        {tasteCategoryList.map(
+                                          (item, index) => (
+                                            <div key={index}>
+                                              <div className="text-2xl py-2 text-rose-300 flex">
+                                                <div>
+                                                  {item.TasteCategoryName}
                                                 </div>
-                                                <div className="">
-                                                  {tasteList
-                                                    .filter(
-                                                      i =>
-                                                        item.TasteCategoryID ===
-                                                        i.TasteCategoryID
-                                                    )
-                                                    .map((i, index) => (
-                                                      <label
-                                                        key={index}
-                                                        className="flex items-center gap-3 px-4 py-4 rounded-3xl border-b-2 border-b-gray-500 cursor-pointer"
-                                                      >
-                                                        {" "}
-                                                        {i.IsMulti == 0 ? (
-                                                          <input
-                                                            type="radio"
-                                                            name={
-                                                              item.TasteCategoryName
-                                                            }
-                                                            className=""
-                                                            onChange={() => {
-                                                              choseTaste(
-                                                                item,
-                                                                i
-                                                              )
-                                                            }}
-                                                          />
-                                                        ) : (
-                                                          <input
-                                                            type="checkbox"
-                                                            name={
-                                                              item.TasteCategoryName
-                                                            }
-                                                            className=""
-                                                            onChange={() => {
-                                                              choseTaste(
-                                                                item,
-                                                                i
-                                                              )
-                                                            }}
-                                                          />
-                                                        )}
-                                                        {/* <div
+                                                {str_split(
+                                                  item.TasteCategoryName
+                                                ) && (
+                                                  <div className="flex justify-center items-center">
+                                                    <p className="text-sm text-red-500 px-2">
+                                                      (必填)
+                                                    </p>
+                                                  </div>
+                                                )}
+                                              </div>
+                                              <div className="">
+                                                {tasteList
+                                                  .filter(
+                                                    i =>
+                                                      item.TasteCategoryID ===
+                                                      i.TasteCategoryID
+                                                  )
+                                                  .map((i, index) => (
+                                                    <label
+                                                      key={index}
+                                                      className="flex items-center gap-3 px-4 py-4 rounded-3xl border-b-2 border-b-gray-500 cursor-pointer"
+                                                    >
+                                                      {" "}
+                                                      {i.IsMulti == 0 ? (
+                                                        <input
+                                                          type="radio"
+                                                          name={
+                                                            item.TasteCategoryName
+                                                          }
+                                                          className=""
+                                                          onChange={() => {
+                                                            choseTaste(item, i)
+                                                          }}
+                                                        />
+                                                      ) : (
+                                                        <input
+                                                          type="checkbox"
+                                                          name={
+                                                            item.TasteCategoryName
+                                                          }
+                                                          className=""
+                                                          onChange={() => {
+                                                            choseTaste(item, i)
+                                                          }}
+                                                        />
+                                                      )}
+                                                      {/* <div
                                                           className={`w-5 h-5 rounded-full ${
                                                             choseProduct.comboList?.some(
                                                               combo =>
@@ -922,35 +939,34 @@ export default function Home() {
                                                               : ""
                                                           }`}
                                                         ></div> */}
-                                                        <p
-                                                          className={`${
-                                                            choseProduct.comboList?.some(
-                                                              combo =>
-                                                                combo.comboProducts?.some(
-                                                                  product =>
-                                                                    product.tasteCategory?.some(
-                                                                      category =>
-                                                                        category.tasteList?.some(
-                                                                          taste =>
-                                                                            taste.tasteID ===
-                                                                            i.TasteID
-                                                                        )
-                                                                    )
-                                                                )
-                                                            )
-                                                              ? "text-amber-500"
-                                                              : ""
-                                                          }`}
-                                                        >
-                                                          {i.TasteName}
-                                                        </p>
-                                                      </label>
-                                                    ))}
-                                                </div>
+                                                      <p
+                                                        className={`${
+                                                          choseProduct.comboList?.some(
+                                                            combo =>
+                                                              combo.comboProducts?.some(
+                                                                product =>
+                                                                  product.tasteCategory?.some(
+                                                                    category =>
+                                                                      category.tasteList?.some(
+                                                                        taste =>
+                                                                          taste.tasteID ===
+                                                                          i.TasteID
+                                                                      )
+                                                                  )
+                                                              )
+                                                          )
+                                                            ? "text-amber-500"
+                                                            : ""
+                                                        }`}
+                                                      >
+                                                        {i.TasteName}
+                                                      </p>
+                                                    </label>
+                                                  ))}
                                               </div>
-                                            )
-                                          )}
-                                        </div>
+                                            </div>
+                                          )
+                                        )}
                                       </div>
                                       <div className="flex justify-center py-4">
                                         <button
@@ -963,56 +979,32 @@ export default function Home() {
                                     </div>
                                   ) : (
                                     <div>
-                                      {comboProducts.map(item => (
-                                        <label
-                                          key={item.ProductID}
-                                          className="flex items-center gap-3 px-4 py-10 rounded-3xl border-b-2 border-b-gray-500 cursor-pointer peer-checked:border-amber-300 peer-checked:bg-gray-100"
+                                      <div className="flex justify-center items-center">
+                                        <p className="text-sm text-red-500">
+                                          (必填)
+                                        </p>
+                                      </div>
+                                      {comboProducts.map((item, index) => (
+                                        <div
+                                          key={index}
+                                          onClick={() => openTaste(item)}
+                                          className="cursor-pointer"
                                         >
-                                          <input
-                                            type="radio"
-                                            name="comboProduct"
-                                            value={item.ProductName}
-                                            className=""
-                                            onChange={() => openTaste(item)}
-                                          />
-                                          {/* <div
-                                            className={`w-5 h-5 rounded-full border-2 ${
-                                              choseProduct.comboList?.some(
-                                                combo =>
-                                                  combo.comboProducts?.some(
-                                                    comboProduct =>
-                                                      comboProduct.comboProductID ===
-                                                      item.ProductID
-                                                  )
-                                              )
-                                                ? "border-gray-800 bg-gray-300"
-                                                : ""
-                                            }`}
-                                          ></div> */}
-                                          <p
+                                          {}
+                                          <div
                                             className={`${
-                                              choseProduct.comboList?.some(
-                                                combo =>
-                                                  combo.comboProducts.some(
-                                                    comboProduct =>
-                                                      comboProduct.comboProductID ===
-                                                      item.ProductID
-                                                  )
+                                              choseComboProductList.some(
+                                                cp =>
+                                                  cp.comboProductID ==
+                                                  item.ProductID
                                               )
                                                 ? "text-amber-500"
                                                 : ""
                                             }`}
                                           >
                                             {item.ProductName}
-                                          </p>
-                                          {str_split(item.ProductName) && (
-                                            <div className="flex justify-center items-center">
-                                              <p className="text-sm text-red-500">
-                                                (必填)
-                                              </p>
-                                            </div>
-                                          )}
-                                        </label>
+                                          </div>
+                                        </div>
                                       ))}
                                     </div>
                                   )}
