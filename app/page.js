@@ -202,37 +202,89 @@ export default function Home() {
     })
   }
   const openTaste = async data => {
-    fetchProductTasteCategory(data.ProductID)
-    fetchTasteName(data.ProductID)
-
+    if (!data || !data.ProductID) return
+  
+    const {
+      PackageComboDataID,
+      ProductID,
+      ProductName,
+      ChooseMode,
+      DefaultItemAmount,
+    } = data
+  
     setChoseComboProductList(prevList => {
-      if (!data || !data.ProductID) return prevList
-      const isExist = prevList.some(
-        item => item.comboProductID === data.ProductID
+      // 找出同 comboID 內的已選項目
+      const filteredItems = prevList.filter(
+        item => item.comboID === PackageComboDataID
       )
-      DefaultItemAmount
-      // 2: 必選
-      if (data.ChooseMode == 2) {
-        return {
-          comboProductID: data.ProductID,
-          comboProductName: data.ProductName,
-        }
-      } else if (data.ChooseMode == 1) {
-        if (isExist) {
-          return prevList.filter(item => item.comboProductID !== data.ProductID)
+      const isMaxLimitReached = filteredItems.length >= DefaultItemAmount
+      const isExist = filteredItems.some(item => item.comboProductID === ProductID)
+  
+      let updatedList = prevList
+  
+      // **處理 ChooseMode === 2（必選模式）**
+      if (ChooseMode === 2) {
+        if (isExist) return prevList // 若已選擇該商品，則不做變更
+  
+        updatedList = [
+          ...prevList.filter(item => item.comboID !== PackageComboDataID), // 清除舊選擇
+          {
+            comboID: PackageComboDataID,
+            comboProductID: ProductID,
+            comboProductName: ProductName,
+            ChooseMode: 2,
+          },
+        ]
+      }
+  
+      // **處理 ChooseMode === 1（可選模式）**
+      else if (ChooseMode === 1) {
+        if (DefaultItemAmount === 1) {
+          // **單選模式（只能選 1 項，可切換）**
+          updatedList = isExist
+            ? prevList
+            : [
+                ...prevList.filter(item => item.comboID !== PackageComboDataID), // 清除同 comboID 內的舊選擇
+                {
+                  comboID: PackageComboDataID,
+                  comboProductID: ProductID,
+                  comboProductName: ProductName,
+                  ChooseMode: 1,
+                },
+              ]
         } else {
-          return [
-            ...prevList,
-            {
-              comboProductID: data.ProductID,
-              comboProductName: data.ProductName,
-            },
-          ]
+          if (isMaxLimitReached) {
+            alert("超過可選數量")
+            return prevList
+          }
+  
+          updatedList = isExist
+            ? prevList.filter(item => item.comboProductID !== ProductID) // 取消選擇
+            : [
+                ...prevList,
+                {
+                  comboID: PackageComboDataID,
+                  comboProductID: ProductID,
+                  comboProductName: ProductName,
+                  ChooseMode: 1,
+                },
+              ]
         }
       }
+  
+      // **回傳更新後的列表**
+      return updatedList
     })
+  
+    // **等到 setState 更新完後，透過 callback 執行 fetch**
+    setTimeout(() => {
+      fetchProductTasteCategory(ProductID)
+      fetchTasteName(ProductID)
+    }, 0)
   }
-  console.log(choseComboProductList, 789)
+  
+  
+  console.log(choseComboProductList, "choseComboProductList")
 
   const str_split = str_value => {
     // 判斷是否必填，因資料只能判斷名稱開頭是否有 '●' ->(為必填) 所以才能以此判斷
@@ -670,7 +722,7 @@ export default function Home() {
                     </div>
                     <div className="w-full py-2 flex gap-2">
                       <div className="w-1/2">
-                        <p>預約日期1:</p>
+                        <p>預約日期:</p>
                         <p className="text-teal-200">{reserveDate}</p>
                       </div>
 
