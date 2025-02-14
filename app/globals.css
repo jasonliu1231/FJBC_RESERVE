@@ -19,3 +19,17 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+/* 自定義捲軸的粗細 */
+.scrollbar-custom::-webkit-scrollbar {
+  width: 6px; 
+  height: 6px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background-color: #6b788b; /* 捲軸滑塊顏色 */
+  border-radius: 8px; /* 捲軸滑塊圓角 */
+}
+.scrollbar-custom::-webkit-scrollbar-track {
+   /* 捲軸背景軌道顏色 */
+  border-radius: 8px; /* 軌道也可以設圓角以搭配滑塊 */
+}
