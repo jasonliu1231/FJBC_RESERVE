@@ -9,7 +9,8 @@ export default async function handler(req, res) {
         ptc.ProductID,
         ptc.TasteCategoryID,
 		    tc.TasteCategoryName,
-        tc.IsMust
+        tc.IsMust,
+        tc.Limit
       FROM ProductTasteCategory ptc
 	    INNER JOIN TasteCategory tc ON tc.TasteCategoryID = ptc.TasteCategoryID
       WHERE ptc.ProductID = @ProductID

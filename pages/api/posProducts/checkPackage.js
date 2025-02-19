@@ -8,11 +8,11 @@ export default async function handler(req, res) {
       SELECT 
         p.ProductID,
         p.ProductName,
-        p.PackageDataID,
-        mt.MenuTypeName
+        p.PackageDataID
+        --mt.MenuTypeName
       FROM Products p
-      INNER JOIN MenuItem mi ON mi.ProductID = p.ProductID
-      INNER JOIN MenuType mt ON mi.MenuTypeID = mt.MenuTypeID
+      --INNER JOIN MenuItem mi ON mi.ProductID = p.ProductID
+      --INNER JOIN MenuType mt ON mi.MenuTypeID = mt.MenuTypeID
       WHERE p.ProductID = @productID
     `
     const result = await pool_pos
@@ -22,8 +22,6 @@ export default async function handler(req, res) {
 
     if (result.recordset.length > 0) {
       res.status(200).json(result.recordset[0])
-    } else {
-      res.status(404).json(null)
     }
   } catch (error) {
     console.error("Error fetching products:", error)

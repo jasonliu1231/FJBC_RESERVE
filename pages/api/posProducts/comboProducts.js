@@ -10,10 +10,10 @@ export default async function handler(req, res) {
         p.ProductID,
         pcpr.PackageComboDataID,
         pcpr.ChooseMode,
-        pcpr.DefaultItemAmount
+        pcd.ChooseItemAmount
     FROM PackageComboProductRelation pcpr
-    INNER JOIN Products p
-        ON pcpr.ProductID = p.ProductID
+    INNER JOIN Products p ON pcpr.ProductID = p.ProductID
+    INNER JOIN PackageComboData pcd ON pcd.PackageComboDataID = pcpr.PackageComboDataID
     WHERE pcpr.PackageComboDataID = @packageComboDataID
     `
     const result = await pool_pos
