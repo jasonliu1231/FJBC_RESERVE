@@ -96,6 +96,10 @@ export default function Home() {
       const data = await res.json()
       if (data.PackageDataID != null) {
         fetchComboList(data.PackageDataID)
+      } else {
+        fetchProductTasteCategory(product_id)
+        fetchTasteName(product_id)
+        setIsTasteClicked(!isTasteClicked)
       }
 
       setIsEditCombo(true)
