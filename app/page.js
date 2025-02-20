@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import Swal from "sweetalert2"
 import { FaShoppingCart } from "react-icons/fa"
 import { FaRegTrashCan } from "react-icons/fa6"
@@ -40,6 +40,19 @@ export default function Home() {
   const [isEditShopCart, setIsEditShopCart] = useState(false)
   const [shopCartCount, setShopCartCount] = useState(null)
   const [isShowMain, setIsShowMain] = useState(false)
+
+  const targetRef = useRef(null)
+
+  const handleScroll = () => {
+    console.log("Scroll triggered")
+    console.log("targetRef.current:", targetRef.current) // Debug
+
+    if (targetRef.current) {
+      targetRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
+    } else {
+      console.log("targetRef.current is null")
+    }
+  }
 
   const hIChangeTel = e => {
     const value = e.target.value.trim() // 去除前後空白
@@ -209,6 +222,7 @@ export default function Home() {
       comboName: ComboName,
     })
   }
+
   const openTaste = async (data, itemIndex) => {
     if (!data || !data.ProductID) return
 
@@ -220,6 +234,9 @@ export default function Home() {
       ChooseItemAmount,
     } = data
     setComboProductIndex(itemIndex)
+    /* if (ChooseItemAmount === 1) {
+    } */
+    removeTasteAndCategory(data, itemIndex)
 
     setChoseComboProductList(prevList => {
       const filteredItems = prevList.filter(
@@ -287,6 +304,31 @@ export default function Home() {
     }, 0)
   }
 
+  const removeTasteAndCategory = (data, itemIndex) => {
+    if (!data || !data.ProductID) return
+
+    setChoseTasteCategory(prevList =>
+      prevList.filter(
+        item =>
+          !(
+            item.comboID === comboProducts[0].PackageComboDataID &&
+            item.comboProductID !== data.ProductID &&
+            item.comboProductIndex === itemIndex
+          )
+      )
+    )
+    setChoseTasteList(prevList =>
+      prevList.filter(
+        item =>
+          !(
+            item.comboID === comboProducts[0].PackageComboDataID &&
+            item.comboProductID !== data.ProductID &&
+            item.comboProductIndex === itemIndex
+          )
+      )
+    )
+  }
+
   const choseTaste = (tasteCategory, taste) => {
     set_ctc(tasteCategory)
     set_ctl(tasteCategory, taste)
@@ -303,7 +345,8 @@ export default function Home() {
       const isExist = filteredItems.some(
         item =>
           item.comboProductID === tasteCategory.ProductID &&
-          item.tasteCategoryID === tasteCategory.TasteCategoryID
+          item.tasteCategoryID === tasteCategory.TasteCategoryID &&
+          item.comboProductIndex === comboProductIndex
       )
 
       let updatedTCList = prevList
@@ -316,9 +359,14 @@ export default function Home() {
             ? prevList // **已選則不變更**
             : [
                 ...prevList.filter(
-                  item => item.tasteCategoryID !== tasteCategory.TasteCategoryID
-                ), // **清除相同 ProductID 下的舊選擇**
+                  item =>
+                    !(
+                      item.tasteCategoryID === tasteCategory.TasteCategoryID &&
+                      item.comboProductIndex === comboProductIndex
+                    )
+                ),
                 {
+                  comboID: comboProducts[0]?.PackageComboDataID,
                   comboProductIndex: comboProductIndex,
                   comboProductID: tasteCategory.ProductID,
                   tasteCategoryID: tasteCategory.TasteCategoryID,
@@ -339,6 +387,7 @@ export default function Home() {
             : [
                 ...prevList,
                 {
+                  comboID: comboProducts[0].PackageComboDataID,
                   comboProductIndex: comboProductIndex,
                   comboProductID: tasteCategory.ProductID,
                   tasteCategoryID: tasteCategory.TasteCategoryID,
@@ -354,13 +403,20 @@ export default function Home() {
           // **單選模式（只能選 1 項，可切換）**
           updatedTCList = isExist
             ? prevList.filter(
-                item => item.tasteCategoryID !== tasteCategory.TasteCategoryID
+                item =>
+                  item.tasteCategoryID !== tasteCategory.TasteCategoryID &&
+                  item.comboProductIndex === comboProductIndex
               ) // **取消選擇**
             : [
                 ...prevList.filter(
-                  item => item.tasteCategoryID !== tasteCategory.TasteCategoryID
+                  item =>
+                    !(
+                      item.tasteCategoryID === tasteCategory.TasteCategoryID &&
+                      item.comboProductIndex === comboProductIndex
+                    )
                 ), // **清除相同 ProductID 下的舊選擇**
                 {
+                  comboID: comboProducts[0]?.PackageComboDataID,
                   comboProductIndex: comboProductIndex,
                   comboProductID: tasteCategory.ProductID,
                   tasteCategoryID: tasteCategory.TasteCategoryID,
@@ -381,6 +437,7 @@ export default function Home() {
             : [
                 ...prevList,
                 {
+                  comboID: comboProducts[0]?.PackageComboDataID,
                   comboProductIndex: comboProductIndex,
                   comboProductID: tasteCategory.ProductID,
                   tasteCategoryID: tasteCategory.TasteCategoryID,
@@ -433,6 +490,7 @@ export default function Home() {
                 )
             ),
             {
+              comboID: comboProducts[0]?.PackageComboDataID,
               comboProductIndex: comboProductIndex,
               comboProductID: tasteCategory.ProductID,
               tasteCategoryID: taste.TasteCategoryID,
@@ -465,6 +523,7 @@ export default function Home() {
                   )
               ),
               {
+                comboID: comboProducts[0]?.PackageComboDataID,
                 comboProductIndex: comboProductIndex,
                 comboProductID: tasteCategory.ProductID,
                 tasteCategoryID: taste.TasteCategoryID,
@@ -488,6 +547,7 @@ export default function Home() {
             updatedList = [
               ...prevList,
               {
+                comboID: comboProducts[0]?.PackageComboDataID,
                 comboProductIndex: comboProductIndex,
                 comboProductID: tasteCategory.ProductID,
                 tasteCategoryID: taste.TasteCategoryID,
@@ -1007,7 +1067,7 @@ export default function Home() {
                   <hr />
                 </div>
                 {isShowMain && (
-                  <div>
+                  <div ref={targetRef}>
                     {isEditCombo ? (
                       <div className="w-full p-2 pb-32">
                         <div className="w-full  rounded-xl border-y border-orange-400">
@@ -1127,7 +1187,10 @@ export default function Home() {
                                       <div className="flex justify-center py-4">
                                         <button
                                           className="w-2/3 h-10 rounded-full bg-slate-800 hover:bg-slate-900"
-                                          onClick={saveTaste}
+                                          onClick={() => {
+                                            saveTaste()
+                                            handleScroll()
+                                          }}
                                         >
                                           完成
                                         </button>
@@ -1135,7 +1198,10 @@ export default function Home() {
                                     </div>
                                   ) : (
                                     <div>
-                                      <div className="flex flex-col gap-3 py-4 rounded-3xl border-b-2 border-b-gray-500 cursor-pointer">
+                                      <div
+                                        
+                                        className="flex flex-col gap-3 py-4 rounded-3xl border-b-2 border-b-gray-500 cursor-pointer"
+                                      >
                                         <div>
                                           {choseComboList &&
                                             Array.from(
@@ -1172,7 +1238,7 @@ export default function Home() {
                                                     (item, index) => (
                                                       <div
                                                         key={index}
-                                                        className="flex border-t py-2"
+                                                        className="flex border-t py-6"
                                                       >
                                                         <div
                                                           className={`${
@@ -1197,14 +1263,14 @@ export default function Home() {
                                                             )
                                                             .map(
                                                               (item, index) => (
-                                                                <div
-                                                                  className=" text-white"
+                                                                <li
+                                                                  className=" text-gray-300 px-2"
                                                                   key={index}
                                                                 >
                                                                   {
                                                                     item.tasteName
                                                                   }
-                                                                </div>
+                                                                </li>
                                                               )
                                                             )}
                                                         </div>
@@ -1213,6 +1279,7 @@ export default function Home() {
                                                           onClick={e => {
                                                             e.stopPropagation() // 防止觸發外層 onClick
                                                             openTaste(item, i) // 傳入 item 和 index
+                                                            handleScroll()
                                                           }}
                                                         >
                                                           {item.ChooseMode ===
