@@ -42,15 +42,18 @@ export default function Home() {
   const [isShowMain, setIsShowMain] = useState(false)
 
   const targetRef = useRef(null)
+  const menuItemRefs = useRef([])
+  const comboItemRefs = useRef([])
+  const menuNavRef = useRef(null)
 
   const handleScroll = () => {
-    console.log("Scroll triggered")
-    console.log("targetRef.current:", targetRef.current) // Debug
-
     if (targetRef.current) {
       targetRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
-    } else {
-      console.log("targetRef.current is null")
+    }
+  }
+  const handleMenuNavScroll = () => {
+    if (menuNavRef.current) {
+      menuNavRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
     }
   }
 
@@ -629,8 +632,8 @@ export default function Home() {
       }
     }
     setIsShowMain(!isShowMain)
+    fetchReserveMenu()
   }
-
   const submit_reserve = () => {}
 
   const removeItem = index => {
@@ -654,7 +657,6 @@ export default function Home() {
       }
     })
   }
-
   const updateQuantity = (index, newQuantity) => {
     if (newQuantity < 1) return
 
@@ -705,9 +707,21 @@ export default function Home() {
     })
   }
 
-  useEffect(() => {
-    fetchReserveMenu()
-  }, [])
+  const scrollToBoth = index => {
+    if (comboItemRefs.current[index]) {
+      comboItemRefs.current[index].scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      })
+    }
+    setTimeout(() => {
+      targetRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      })
+    }, 300) // 100ms 後執行第二個滾動
+  }
 
   useEffect(() => {
     const totalQuantity = shopCartList.reduce(
@@ -732,7 +746,7 @@ export default function Home() {
 
   return (
     <>
-      <div className="w-full h-auto text-white font-sans font-bold">
+      <div className="w-full h-auto text-white font-mono font-bold">
         {/* NAVBAR */}
         <div className="z-50 sticky top-0  -50 w-full h-16 bg-[#2c4457] flex justify-around items-center border-b-2">
           {/* 左側區域：Logo 和 店名 */}
@@ -868,30 +882,33 @@ export default function Home() {
                   ></img>
                 </div>
                 {/* 內容 */}
-                <div className=" px-4 font-bold font-sans text-center">
-                  <h1 className="text-2xl">歡迎來到 CafeLux 無界食館！</h1>
-                  <h1 className="text-2xl font-bold mb-4">
-                    讓每位顧客都能感受到家的味道與異國的風情
-                  </h1>
-                  <div className="text-lg leading-relaxed">
-                    我們是一家融合各國料理的社區餐廳，致力於將全球美食風味帶到您的餐桌。
-                    <br />
-                    來自世界各地的經典佳餚，搭配在地社區的親切服務，
-                    <br />
-                    我們期待與您共度每一刻的美好時光。
-                    <br />
-                    <div className="py-4">
-                      <hr />
+                {!isShowMain && (
+                  <div className=" px-4 font-bold font-sans text-center">
+                    <h1 className="text-2xl">歡迎來到 CafeLux 無界食館！</h1>
+                    <h1 className="text-2xl font-bold mb-4">
+                      讓每位顧客都能感受到家的味道與異國的風情
+                    </h1>
+                    <div className="text-lg leading-relaxed">
+                      我們是一家融合各國料理的社區餐廳，致力於將全球美食風味帶到您的餐桌。
+                      <br />
+                      來自世界各地的經典佳餚，搭配在地社區的親切服務，
+                      <br />
+                      我們期待與您共度每一刻的美好時光。
+                      <br />
+                      <div className="py-4">
+                        <hr />
+                      </div>
+                      一杯咖啡 » 一段故事
+                      <br />
+                      每一口都帶您走進咖啡的世界，感受每一位咖啡師的匠心獨運，分享您與朋友之間的故事。
+                      <br />
+                      ​一道美食 » 一生難忘
+                      <br />
+                      每一口都是精心準備的驚喜。無論是與家人共進晚餐，或是與朋友小聚，將成為您珍貴回憶的一部分。
                     </div>
-                    一杯咖啡 » 一段故事
-                    <br />
-                    每一口都帶您走進咖啡的世界，感受每一位咖啡師的匠心獨運，分享您與朋友之間的故事。
-                    <br />
-                    ​一道美食 » 一生難忘
-                    <br />
-                    每一口都是精心準備的驚喜。無論是與家人共進晚餐，或是與朋友小聚，將成為您珍貴回憶的一部分。
                   </div>
-                </div>
+                )}
+
                 <div className="py-2">
                   <hr />
                 </div>
@@ -1055,7 +1072,10 @@ export default function Home() {
                     <div className="flex justify-center items-center">
                       <button
                         className="w-full h-auto rounded-xl border p-2 hover:bg-slate-900"
-                        onClick={show_main}
+                        onClick={() => {
+                          show_main()
+                          handleMenuNavScroll()
+                        }}
                       >
                         前往預定
                       </button>
@@ -1063,25 +1083,22 @@ export default function Home() {
                   </div>
                 )}
 
-                <div className="py-4">
-                  <hr />
-                </div>
                 {isShowMain && (
                   <div ref={targetRef}>
                     {isEditCombo ? (
                       <div className="w-full p-2 pb-32">
-                        <div className="w-full  rounded-xl border-y border-orange-400">
-                          <div className="w-full h-10 ">
-                            <button
-                              className=" w-auto text-white b p-2 ml-2 border-b-2 border-b-white "
-                              onClick={closeEditCombo}
-                            >
-                              ← 返回
-                            </button>
-                          </div>
+                        <div className="w-full  rounded-xl shadow-2xl border-y-2 border-rose-950">
                           {choseProduct ? (
                             <div>
                               <div>
+                                <div className="w-full h-10 mt-16">
+                                  <button
+                                    className=" w-auto text-white b p-2 ml-2 border-b-2 border-b-white sticky"
+                                    onClick={closeEditCombo}
+                                  >
+                                    ← 返回
+                                  </button>
+                                </div>
                                 <div className="text-white p-4 text-xl ">
                                   {choseProduct.product_name}
                                 </div>
@@ -1091,23 +1108,27 @@ export default function Home() {
                                   {comboList &&
                                     comboList.map((item, index) => (
                                       <div
+                                        ref={el =>
+                                          (comboItemRefs.current[index] = el)
+                                        }
                                         key={index}
                                         className="my-4"
-                                        onClick={() => [
-                                          setComboListClicked(index),
+                                        onClick={() => {
+                                          setComboListClicked(index)
                                           read_comboProducts(
                                             item.PackageComboDataID,
                                             item.ComboName
-                                          ),
-                                        ]}
+                                          )
+                                          scrollToBoth(index)
+                                        }}
                                       >
                                         <div className="w-36 text-white  cursor-pointer">
                                           <div
                                             className={`${
                                               index === comboListClicked
-                                                ? "text-red-200 text-xl"
+                                                ? "text-orange-300 text-xl shadow-orange-300/50 shadow-inner rounded-xl"
                                                 : "hover:border-b shadow-inner"
-                                            } w-auto flex justify-center items-center border-b-2 border-orange-400`}
+                                            } w-auto flex justify-center items-center  py-1`}
                                           >
                                             <div className="flex">
                                               {item.ComboName}
@@ -1154,9 +1175,9 @@ export default function Home() {
                                                     <div
                                                       key={index}
                                                       className="flex items-center gap-3 px-4 py-4 rounded-3xl border-b-2 border-b-gray-500 cursor-pointer"
-                                                      onClick={() =>
+                                                      onClick={() => {
                                                         choseTaste(item, i)
-                                                      }
+                                                      }}
                                                     >
                                                       <p
                                                         className={`${
@@ -1198,10 +1219,7 @@ export default function Home() {
                                     </div>
                                   ) : (
                                     <div>
-                                      <div
-                                        
-                                        className="flex flex-col gap-3 py-4 rounded-3xl border-b-2 border-b-gray-500 cursor-pointer"
-                                      >
+                                      <div className="flex flex-col gap-3 py-4 rounded-3xl cursor-pointer">
                                         <div>
                                           {choseComboList &&
                                             Array.from(
@@ -1278,8 +1296,8 @@ export default function Home() {
                                                           className="ml-auto text-orange-100 hover:text-blue-700"
                                                           onClick={e => {
                                                             e.stopPropagation() // 防止觸發外層 onClick
-                                                            openTaste(item, i) // 傳入 item 和 index
-                                                            handleScroll()
+                                                            openTaste(item, i)
+                                                            scrollToBoth()
                                                           }}
                                                         >
                                                           {item.ChooseMode ===
@@ -1331,7 +1349,7 @@ export default function Home() {
                                       ＋
                                     </button>
                                   </div>
-                                  <div className="w-full h-12 my-8 flex justify-center">
+                                  <div className="fixed bottom-0 left-0 w-full h-20 mt-8 py-4 flex justify-center bg-[#2c4457]">
                                     <button
                                       className="w-2/3 rounded-full bg-slate-800 hover:bg-slate-900"
                                       onClick={add_shopCart}
@@ -1380,23 +1398,31 @@ export default function Home() {
                         </div>
                       </div>
                     ) : (
-                      <div className="w-full p-4 pb-28">
+                      <div className="w-full p-4">
                         {/* 菜單navbar */}
-                        <div className="w-full flex overflow-x-auto scrollbar-custom">
+                        <div className="w-full bg-[#2c4457] rounded-xl flex overflow-x-auto scrollbar-custom sticky top-16 z-50 ">
                           {menuGroupList.map((item, index) => (
                             <div
                               key={index}
+                              ref={el => (menuItemRefs.current[index] = el)}
                               className={`flex justify-center items-center ${
                                 isShaking ? "animate-shake" : ""
                               } max-w-full h-12 p-2 m-2 text-nowrap cursor-pointer shadow-inner shadow-white rounded-2xl`}
                               onClick={() => {
                                 setMenuTypeClicked(index)
+                                if (menuItemRefs.current[index]) {
+                                  menuItemRefs.current[index].scrollIntoView({
+                                    behavior: "smooth",
+                                    block: "nearest",
+                                    inline: "center",
+                                  })
+                                }
                               }}
                             >
                               <div
                                 className={`${
                                   index === menuTypeClicked
-                                    ? "border-b"
+                                    ? "border-b text-red-200"
                                     : "hover:border-b"
                                 }`}
                                 onClick={() => {
@@ -1418,7 +1444,7 @@ export default function Home() {
                                 className="h-auto bg-white p-2 m-2 rounded-xl flex cursor-pointer shadow-inner shadow-black "
                                 onClick={() => openEditCombo(item)}
                               >
-                                <div className="w-3/5 h-full flex items-center justify-start px-3 ">
+                                <div className="w-3/5 h-full flex items-center justify-start px-3">
                                   <div className="text-black">
                                     {item.product_name}
                                   </div>
@@ -1444,6 +1470,8 @@ export default function Home() {
                     )}
                   </div>
                 )}
+
+                <div ref={menuNavRef} className="h-[200px]"></div>
               </div>
             )}
           </div>
