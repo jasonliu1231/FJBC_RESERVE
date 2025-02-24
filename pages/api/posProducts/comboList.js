@@ -6,13 +6,13 @@ export default async function handler(req, res) {
     const { packageDataID } = req.query
     const query = `
     SELECT 
-        p.ProductName, 
-        pcd.PackageComboDataID,
-        pcd.ComboName,
-        pcd.ChooseMode
+      p.ProductName,
+      pcd.PackageComboDataID,
+      pcd.ComboName,
+      pcd.ChooseMode
     FROM Products p
-    LEFT JOIN PackageComboData pcd 
-        ON pcd.PackageDataID = p.PackageDataID
+    LEFT JOIN PackageComboData pcd
+      ON pcd.PackageDataID = p.PackageDataID
     WHERE pcd.PackageDataID = @PackageDataID
     `
     const result = await pool_pos

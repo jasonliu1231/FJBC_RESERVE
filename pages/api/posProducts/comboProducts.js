@@ -6,11 +6,11 @@ export default async function handler(req, res) {
     const { packageComboDataID } = req.query
     const query = `
     SELECT 
-        p.ProductName,
-        p.ProductID,
-        pcpr.PackageComboDataID,
-        pcpr.ChooseMode,
-        pcd.ChooseItemAmount
+      p.ProductName,
+      p.ProductID,
+      pcpr.PackageComboDataID,
+      pcpr.ChooseMode,
+      pcd.ChooseItemAmount
     FROM PackageComboProductRelation pcpr
     INNER JOIN Products p ON pcpr.ProductID = p.ProductID
     INNER JOIN PackageComboData pcd ON pcd.PackageComboDataID = pcpr.PackageComboDataID

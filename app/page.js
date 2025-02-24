@@ -220,10 +220,13 @@ export default function Home() {
 
   const read_comboProducts = (packageComboDataID, ComboName) => {
     fetchComboProducts(packageComboDataID)
-    setChoseComboList({
-      comboID: packageComboDataID,
-      comboName: ComboName,
-    })
+    setChoseComboList(prevList => [
+      ...prevList.filter(item => item.comboID !== packageComboDataID),
+      {
+        comboID: packageComboDataID,
+        comboName: ComboName,
+      },
+    ])
   }
 
   const openTaste = async (data, itemIndex) => {
@@ -605,8 +608,23 @@ export default function Home() {
   }
 
   const saveTaste = () => {
+    const tasteCategory = tasteCategoryList.filter(t => t.IsMust === "1")
+    console.log(tasteCategory, "missingTaste")
+    const missingTaste = tasteCategory.filter(
+      taste =>
+        !choseTasteList.some(
+          chosen => chosen.tasteCategoryID === taste.TasteCategoryID
+        )
+    )
+
+    console.log(missingTaste, "missingTaste")
+    if (missingTaste.length > 0) {
+      showWarningAlert(`★ ${missingTaste[0].TasteCategoryName} ★ 必選尚未選擇`)
+      return
+    }
     setComboProductIndex()
     setIsTasteClicked(!isTasteClicked)
+    handleScroll()
   }
 
   const add_count = () => {
@@ -624,6 +642,23 @@ export default function Home() {
     }))
   }
   const add_shopCart = () => {
+    if (count < 1) {
+      showWarningAlert("請選擇數量")
+      return
+    }
+
+    const mandatoryCombos = comboList.filter(p => p.ChooseMode === 2)
+    const missingCombos = mandatoryCombos.filter(
+      combo =>
+        !choseComboList.some(
+          chosen => chosen.comboID === combo.PackageComboDataID
+        )
+    )
+    if (missingCombos.length > 0) {
+      showWarningAlert(`★ ${missingCombos[0].ComboName} ★ 必選尚未選擇`)
+      return
+    }
+
     setShopCartList(prevList => [
       ...prevList,
       {
@@ -1294,7 +1329,7 @@ export default function Home() {
                                           className="w-2/3 h-10 rounded-full bg-slate-800 hover:bg-slate-900"
                                           onClick={() => {
                                             saveTaste()
-                                            handleScroll()
+                                            
                                           }}
                                         >
                                           完成
@@ -1323,8 +1358,7 @@ export default function Home() {
                                                   className="rounded-lg px-3 py-2 shadow-inner shadow-gray-200/50 my-4"
                                                 >
                                                   <div className="flex text-xl py-2 text-cyan-200 justify-center item-center gap-2">
-                                                    {choseComboList?.comboName}
-                                                    -選項 {i + 1}/
+                                                    選項 {i + 1}/
                                                     {
                                                       comboProducts[0]
                                                         ?.ChooseItemAmount
