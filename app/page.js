@@ -331,6 +331,41 @@ export default function Home() {
       )
     )
   }
+  const cancelTasteAndCategory = (data, itemIndex) => {
+    if (!data || !data.ProductID) return
+
+    setChoseComboProductList(prevList =>
+      prevList.filter(
+        item =>
+          !(
+            item.comboID === comboProducts[0].PackageComboDataID &&
+            item.comboProductID === data.ProductID &&
+            item.index === itemIndex
+          )
+      )
+    )
+
+    setChoseTasteCategory(prevList =>
+      prevList.filter(
+        item =>
+          !(
+            item.comboID === comboProducts[0].PackageComboDataID &&
+            item.comboProductID === data.ProductID &&
+            item.comboProductIndex === itemIndex
+          )
+      )
+    )
+    setChoseTasteList(prevList =>
+      prevList.filter(
+        item =>
+          !(
+            item.comboID === comboProducts[0].PackageComboDataID &&
+            item.comboProductID === data.ProductID &&
+            item.comboProductIndex === itemIndex
+          )
+      )
+    )
+  }
 
   const choseTaste = (tasteCategory, taste) => {
     set_ctc(tasteCategory)
@@ -404,28 +439,30 @@ export default function Home() {
       else if (tasteCategory.IsMust === "0") {
         if (tasteCategory.Limit === 1) {
           // **單選模式（只能選 1 項，可切換）**
-          updatedTCList = isExist
-            ? prevList.filter(
-                item =>
-                  item.tasteCategoryID !== tasteCategory.TasteCategoryID &&
-                  item.comboProductIndex === comboProductIndex
-              ) // **取消選擇**
-            : [
-                ...prevList.filter(
+          updatedTCList =
+            isExist && isExist.length > 1
+              ? prevList.filter(
                   item =>
-                    !(
-                      item.tasteCategoryID === tasteCategory.TasteCategoryID &&
-                      item.comboProductIndex === comboProductIndex
-                    )
-                ), // **清除相同 ProductID 下的舊選擇**
-                {
-                  comboID: comboProducts[0]?.PackageComboDataID,
-                  comboProductIndex: comboProductIndex,
-                  comboProductID: tasteCategory.ProductID,
-                  tasteCategoryID: tasteCategory.TasteCategoryID,
-                  tasteCategoryName: tasteCategory.TasteCategoryName,
-                },
-              ]
+                    item.tasteCategoryID !== tasteCategory.TasteCategoryID &&
+                    item.comboProductIndex === comboProductIndex
+                ) // **取消選擇**
+              : [
+                  ...prevList.filter(
+                    item =>
+                      !(
+                        item.tasteCategoryID ===
+                          tasteCategory.TasteCategoryID &&
+                        item.comboProductIndex === comboProductIndex
+                      )
+                  ), // **清除相同 ProductID 下的舊選擇**
+                  {
+                    comboID: comboProducts[0]?.PackageComboDataID,
+                    comboProductIndex: comboProductIndex,
+                    comboProductID: tasteCategory.ProductID,
+                    tasteCategoryID: tasteCategory.TasteCategoryID,
+                    tasteCategoryName: tasteCategory.TasteCategoryName,
+                  },
+                ]
         } else {
           // **多選模式（可選多項，不能超過上限）**
           if (isMaxLimitReached) {
@@ -433,20 +470,21 @@ export default function Home() {
             return prevList
           }
 
-          updatedTCList = isExist
-            ? prevList.filter(
-                item => item.tasteCategoryID !== tasteCategory.TasteCategoryID
-              ) // **取消選擇**
-            : [
-                ...prevList,
-                {
-                  comboID: comboProducts[0]?.PackageComboDataID,
-                  comboProductIndex: comboProductIndex,
-                  comboProductID: tasteCategory.ProductID,
-                  tasteCategoryID: tasteCategory.TasteCategoryID,
-                  tasteCategoryName: tasteCategory.TasteCategoryName,
-                },
-              ]
+          updatedTCList =
+            isExist && isExist.length > 1
+              ? prevList.filter(
+                  item => item.tasteCategoryID !== tasteCategory.TasteCategoryID
+                ) // **取消選擇**
+              : [
+                  ...prevList,
+                  {
+                    comboID: comboProducts[0]?.PackageComboDataID,
+                    comboProductIndex: comboProductIndex,
+                    comboProductID: tasteCategory.ProductID,
+                    tasteCategoryID: tasteCategory.TasteCategoryID,
+                    tasteCategoryName: tasteCategory.TasteCategoryName,
+                  },
+                ]
         }
       }
 
@@ -748,15 +786,19 @@ export default function Home() {
     <>
       <div className="w-full h-auto text-white font-mono font-bold">
         {/* NAVBAR */}
-        <div className="z-50 sticky top-0  -50 w-full h-16 bg-[#2c4457] flex justify-around items-center border-b-2">
+        <div className="z-50 sticky top-0  w-full h-16 bg-[#2c4457] flex justify-around items-center border-b-2">
           {/* 左側區域：Logo 和 店名 */}
           <div className="flex items-center space-x-4">
-            <img
-              src="/cafelux_logo.png"
-              alt="CAFELUX Logo"
-              className="rounded-xl w-10"
-            />
-            <span className="text-lg font-bold truncate w-full sm:w-3/4 md:w-full lg:w-full xl:w-full">
+            <a href="">
+              <img
+                src="/cafelux_logo.png"
+                alt="CAFELUX Logo"
+                className="rounded-xl w-10"
+                href="http://localhost:3000/#"
+              />
+            </a>
+
+            <span className="text-lg font-bold truncate w-full sm:w-full md:w-full lg:w-full xl:w-full">
               CAFELUX 太平咖啡美食
             </span>
           </div>
@@ -1090,7 +1132,7 @@ export default function Home() {
                         <div className="w-full  rounded-xl shadow-2xl border-y-2 border-rose-950">
                           {choseProduct ? (
                             <div>
-                              <div>
+                              <div className="sticky top-16 z-40 bg-[#2c4457]/80 rounded-xl">
                                 <div className="w-full h-10 mt-16">
                                   <button
                                     className=" w-auto text-white b p-2 ml-2 border-b-2 border-b-white sticky"
@@ -1099,12 +1141,50 @@ export default function Home() {
                                     ← 返回
                                   </button>
                                 </div>
-                                <div className="text-white p-4 text-xl ">
+                                <div className="text-white p-4 text-lg">
                                   {choseProduct.product_name}
+                                  <div className="bg-gray-950/30 text-amber-500 text-sm rounded-xl p-2 space-y-1 grid">
+                                    {choseComboProductList.map(
+                                      (item, index) => (
+                                        <div key={index}>
+                                          {item.comboProductName}
+                                        </div>
+                                      )
+                                    )}
+                                    {/* {Array.from(
+                                      new Map(
+                                        choseTasteCategory.map(item => [
+                                          item.tasteCategoryID,
+                                          item,
+                                        ])
+                                      ).values()
+                                    ).map((category, index) => (
+                                      <div
+                                        key={index}
+                                        className="text-sm text-rose-300"
+                                      >
+                                        {category.tasteCategoryName}
+                                        {choseTasteList
+                                          .filter(
+                                            i =>
+                                              i.tasteCategoryID ===
+                                              category.tasteCategoryID
+                                          )
+                                          .map((taste, index) => (
+                                            <div
+                                              key={index}
+                                              className="text-amber-500 pl-4"
+                                            >
+                                              <div>{taste.tasteName}</div>
+                                            </div>
+                                          ))}
+                                      </div>
+                                    ))} */}
+                                  </div>
                                 </div>
                               </div>
                               <div className="">
-                                <div className="w-full h-20 py-2 px-4 border-b-2 flex gap-2 sticky top-16 z-50 bg-[#2c4457] overflow-y-auto scrollbar-custom ">
+                                <div className="w-full h-20 py-2 px-4 border-b-2 flex gap-2  bg-[#2c4457] overflow-y-auto scrollbar-custom ">
                                   {comboList &&
                                     comboList.map((item, index) => (
                                       <div
@@ -1141,12 +1221,16 @@ export default function Home() {
                                 <div className="mt-10">
                                   {isTasteClicked ? (
                                     <div>
-                                      <button
-                                        className=" w-auto text-white b p-2 ml-2 border-b-2 border-b-white "
-                                        onClick={closeTaste}
-                                      >
-                                        ← 返回
-                                      </button>
+                                      {comboProducts.length > 0 && (
+                                        <div>
+                                          <button
+                                            className=" w-auto text-white b p-2 ml-2 border-b-2 border-b-white "
+                                            onClick={closeTaste}
+                                          >
+                                            ← 返回
+                                          </button>
+                                        </div>
+                                      )}
                                       <div className="mt-4">
                                         {tasteCategoryList.map(
                                           (item, index) => (
@@ -1295,8 +1379,7 @@ export default function Home() {
                                                         <button
                                                           className="ml-auto text-orange-100 hover:text-blue-700"
                                                           onClick={e => {
-                                                            e.stopPropagation() // 防止觸發外層 onClick
-                                                            openTaste(item, i)
+                                                            // e.stopPropagation() // 防止觸發外層 onClick
                                                             scrollToBoth()
                                                           }}
                                                         >
@@ -1308,11 +1391,27 @@ export default function Home() {
                                                                 item.ProductID &&
                                                               cp.index == i
                                                           ) ? (
-                                                            <div className="text-red-300">
+                                                            <div
+                                                              className="text-red-300"
+                                                              onClick={() => {
+                                                                cancelTasteAndCategory(
+                                                                  item,
+                                                                  i
+                                                                )
+                                                              }}
+                                                            >
                                                               取消
                                                             </div>
                                                           ) : (
-                                                            <div className="text-purple-200">
+                                                            <div
+                                                              className="text-purple-200"
+                                                              onClick={() => {
+                                                                openTaste(
+                                                                  item,
+                                                                  i
+                                                                )
+                                                              }}
+                                                            >
                                                               選擇
                                                             </div>
                                                           )}
