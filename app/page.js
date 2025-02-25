@@ -1,236 +1,275 @@
-"use client"
+"use client";
 
-import { useEffect, useState, useRef } from "react"
-import Swal from "sweetalert2"
-import { FaShoppingCart } from "react-icons/fa"
-import { FaRegTrashCan } from "react-icons/fa6"
+import { useEffect, useState, useRef } from "react";
+import Swal from "sweetalert2";
+import { FaShoppingCart } from "react-icons/fa";
+import { FaRegTrashCan } from "react-icons/fa6";
 
 export default function Home() {
-  const [isShaking, setIsShaking] = useState(false)
+  const [isShaking, setIsShaking] = useState(false);
   // 預約者姓名
-  const [inputName, setInputName] = useState("0")
-  const [inputTel, setInputTel] = useState("0979536456")
-  const [TelIsValid, setTelIsValid] = useState(true)
-  const [adultsNum, setAdultsNum] = useState(1)
-  const [childrenNum, setChildrenNum] = useState(0)
-  const [reserveDate, setReserveDate] = useState("2024-02-07")
-  const [reserveTime, setReserveTime] = useState("1028")
+  const [inputName, setInputName] = useState("0");
+  const [inputTel, setInputTel] = useState("0979536456");
+  const [TelIsValid, setTelIsValid] = useState(true);
+  const [adultsNum, setAdultsNum] = useState(1);
+  const [childrenNum, setChildrenNum] = useState(0);
+  const [reserveDate, setReserveDate] = useState("2024-02-07");
+  const [reserveTime, setReserveTime] = useState("1028");
 
-  const [menuGroupList, setMenuGroupList] = useState([])
-  const [menuTypeClicked, setMenuTypeClicked] = useState()
-  const [menuDetailList, setMenuDetailList] = useState([])
-  const [isEditCombo, setIsEditCombo] = useState(false)
+  const [menuGroupList, setMenuGroupList] = useState([]);
+  const [menuTypeClicked, setMenuTypeClicked] = useState();
+  const [menuDetailList, setMenuDetailList] = useState([]);
+  const [isEditCombo, setIsEditCombo] = useState(false);
 
-  const [comboList, setComboList] = useState([])
-  const [comboListClicked, setComboListClicked] = useState()
-  const [comboProducts, setComboProducts] = useState([])
-  const [tasteCategoryList, setTasteCategoryList] = useState([])
-  const [tasteList, setTasteList] = useState([])
-  const [isTasteClicked, setIsTasteClicked] = useState(false)
+  const [comboList, setComboList] = useState([]);
+  const [comboListClicked, setComboListClicked] = useState();
+  const [comboProducts, setComboProducts] = useState([]);
+  const [tasteCategoryList, setTasteCategoryList] = useState([]);
+  const [tasteList, setTasteList] = useState([]);
+  const [isTasteClicked, setIsTasteClicked] = useState(false);
 
-  const [comboProductIndex, setComboProductIndex] = useState()
-  const [choseComboList, setChoseComboList] = useState([])
-  const [choseComboProductList, setChoseComboProductList] = useState([])
-  const [choseTasteCategory, setChoseTasteCategory] = useState([])
-  const [choseTasteList, setChoseTasteList] = useState([])
-  const [choseProduct, setChoseProduct] = useState()
+  const [comboProductIndex, setComboProductIndex] = useState();
+  const [comboProductID, setComboProductID] = useState();
+  const [choseComboList, setChoseComboList] = useState([]);
+  const [choseComboProductList, setChoseComboProductList] = useState([]);
+  const [choseTasteCategory, setChoseTasteCategory] = useState([]);
+  const [choseTasteList, setChoseTasteList] = useState([]);
+  const [choseProduct, setChoseProduct] = useState();
 
-  const [count, setCount] = useState(0)
-  const [shopCartList, setShopCartList] = useState([])
-  const [isEditShopCart, setIsEditShopCart] = useState(false)
-  const [shopCartCount, setShopCartCount] = useState(null)
-  const [isShowMain, setIsShowMain] = useState(false)
+  const [count, setCount] = useState(0);
+  const [shopCartList, setShopCartList] = useState([]);
+  const [isEditShopCart, setIsEditShopCart] = useState(false);
+  const [shopCartCount, setShopCartCount] = useState(null);
+  const [isShowMain, setIsShowMain] = useState(false);
 
-  const targetRef = useRef(null)
-  const menuItemRefs = useRef([])
-  const comboItemRefs = useRef([])
-  const menuNavRef = useRef(null)
+  const targetRef = useRef(null);
+  const menuItemRefs = useRef([]);
+  const comboItemRefs = useRef([]);
+  const menuNavRef = useRef(null);
 
   const handleScroll = () => {
     if (targetRef.current) {
-      targetRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
+      targetRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  }
+  };
   const handleMenuNavScroll = () => {
     if (menuNavRef.current) {
-      menuNavRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
+      menuNavRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  }
+  };
 
   const hIChangeTel = e => {
-    const value = e.target.value.trim() // 去除前後空白
+    const value = e.target.value.trim(); // 去除前後空白
     // 台灣常見電話號碼格式：+886 開頭、手機號碼（09 開頭）、市話號碼
-    const phoneRegex = /^(\+886-?|0)?9\d{8}$|^(\+886-?|0)[2-8]\d{7,8}$/
+    const phoneRegex = /^(\+886-?|0)?9\d{8}$|^(\+886-?|0)[2-8]\d{7,8}$/;
 
     if (phoneRegex.test(value)) {
-      setTelIsValid(true) // 格式正確
+      setTelIsValid(true); // 格式正確
       if (value.startsWith("+886")) {
-        setInputTel(value.replace(/^\+886/, "0"))
+        setInputTel(value.replace(/^\+886/, "0"));
       }
-      setTelIsValid(true)
-      setInputTel(value)
+      setTelIsValid(true);
+      setInputTel(value);
     } else {
-      setTelIsValid(false) // 格式錯誤
-      setInputTel(value) // 允許顯示，但不會認為合法
+      setTelIsValid(false); // 格式錯誤
+      setInputTel(value); // 允許顯示，但不會認為合法
     }
-  }
+  };
 
   const fetchReserveMenu = async () => {
     try {
-      const res = await fetch("/api/reserveMenu/menuGroup")
-      const data = await res.json()
-      setMenuGroupList(data)
+      const res = await fetch("/api/reserveMenu/menuGroup");
+      const data = await res.json();
+      setMenuGroupList(data);
     } catch (error) {
-      console.error("Error fetching products:", error)
+      console.error("Error fetching products:", error);
     }
-  }
+  };
 
   const fetchMenuTypeList = async product_type_id => {
     try {
       const res = await fetch(
         `/api/reserveMenu/typeList?productTypeId=${product_type_id}`
-      )
+      );
       if (!res.ok) {
-        throw new Error(`HTTP error! Status: ${res.status}`)
+        throw new Error(`HTTP error! Status: ${res.status}`);
       }
-      const data = await res.json()
+      const data = await res.json();
 
-      setMenuDetailList([])
-      setMenuDetailList(data)
+      setMenuDetailList([]);
+      setMenuDetailList(data);
     } catch (error) {
-      console.error("Error fetching products:", error)
+      console.error("Error fetching products:", error);
     }
-  }
+  };
   const fetchMenuInfo = async product_id => {
     try {
       const res = await fetch(
         `/api/posProducts/checkPackage?productID=${product_id}`
-      )
+      );
       if (!res.ok) {
-        throw new Error(`HTTP error! Status: ${res.status}`)
+        throw new Error(`HTTP error! Status: ${res.status}`);
       }
-      const data = await res.json()
+      const data = await res.json();
       if (data.PackageDataID != null) {
-        fetchComboList(data.PackageDataID)
+        fetchComboList(data.PackageDataID);
       } else {
-        fetchProductTasteCategory(product_id)
-        fetchTasteName(product_id)
-        setIsTasteClicked(!isTasteClicked)
+        fetchProductTasteCategory(product_id);
+        fetchTasteName(product_id);
+        setIsTasteClicked(!isTasteClicked);
       }
 
-      setIsEditCombo(true)
+      setIsEditCombo(true);
       setChoseProduct({
         product_id: data.ProductID,
         product_name: data.ProductName,
         product_type_name: data.MenuTypeName,
         quantity: 0,
-      })
+      });
     } catch (error) {
-      console.error("Error fetching products:", error)
+      console.error("Error fetching products:", error);
     }
-  }
+  };
   const fetchComboList = async packageDataID => {
     try {
       const res = await fetch(
         `/api/posProducts/comboList?packageDataID=${packageDataID}`
-      )
+      );
       if (!res.ok) {
-        throw new Error(`HTTP error! Status: ${res.status}`)
+        throw new Error(`HTTP error! Status: ${res.status}`);
       }
-      const data = await res.json()
-      setComboList(data)
+      const data = await res.json();
+      setComboList(data);
     } catch (error) {
-      console.error("Error fetching products:", error)
+      console.error("Error fetching products:", error);
     }
-  }
+  };
   const fetchComboProducts = async packageComboDataID => {
     try {
       const res = await fetch(
         `/api/posProducts/comboProducts?packageComboDataID=${packageComboDataID}`
-      )
+      );
       if (!res.ok) {
-        console.error(res.error)
+        console.error(res.error);
       }
-      const data = await res.json()
-      setComboProducts(data)
+      const data = await res.json();
+      setComboProducts(data);
     } catch (error) {
-      console.error("Error fetching products:", error)
+      console.error("Error fetching products:", error);
     }
-  }
+  };
   const fetchProductTasteCategory = async product_id => {
     try {
       const res = await fetch(
         `/api/posProducts/checkTaste?productID=${product_id}`
-      )
+      );
       if (!res.ok) {
-        throw new Error(`HTTP error! Status: ${res.status}`)
+        throw new Error(`HTTP error! Status: ${res.status}`);
       }
-      const data = await res.json()
+      const data = await res.json();
       if (data) {
-        setTasteCategoryList(data)
+        setTasteCategoryList(data);
       } else {
-        setTasteCategoryList([])
+        setTasteCategoryList([]);
       }
     } catch (error) {
-      console.error("Error fetching products:", error)
+      console.error("Error fetching products:", error);
     }
-  }
+  };
   const fetchTasteName = async product_id => {
     try {
       const res = await fetch(
         `/api/posProducts/tasteName?productID=${product_id}`
-      )
+      );
       if (!res.ok) {
-        throw new Error(`HTTP error! Status: ${res.status}`)
+        throw new Error(`HTTP error! Status: ${res.status}`);
       }
-      const data = await res.json()
+      const data = await res.json();
       if (data.length > 0) {
-        setTasteList(data)
-        setIsTasteClicked(!isTasteClicked)
+        setTasteList(data);
+        setIsTasteClicked(!isTasteClicked);
       }
     } catch (error) {
-      console.error("Error fetching products:", error)
+      console.error("Error fetching products:", error);
     }
-  }
+  };
 
   const openEditCombo = async data => {
-    fetchMenuInfo(data.product_id)
-    setCount(1)
-    setChoseProduct()
-  }
+    fetchMenuInfo(data.product_id);
+    setCount(1);
+    setChoseProduct();
+  };
   const closeEditCombo = () => {
-    setCount(1)
-    setComboList([])
-    setComboListClicked()
-    setComboProducts([])
-    setTasteCategoryList([])
-    setTasteList([])
-    setIsEditCombo(false)
-    setChoseProduct([])
-    setIsTasteClicked(false)
-    setChoseComboList([])
-    setChoseComboProductList([])
-    setChoseTasteCategory([])
-    setChoseTasteList([])
-  }
+    setCount(1);
+    setComboList([]);
+    setComboListClicked();
+    setComboProducts([]);
+    setTasteCategoryList([]);
+    setTasteList([]);
+    setIsEditCombo(false);
+    setIsTasteClicked(false);
+    setComboProductIndex();
+    setComboProductID();
+    setChoseProduct([]);
+    setChoseComboList([]);
+    setChoseComboProductList([]);
+    setChoseTasteCategory([]);
+    setChoseTasteList([]);
+  };
 
-  const closeTaste = async () => {
-    setIsTasteClicked(!isTasteClicked)
-  }
+  const closeTaste = async productID => {
+    console.log(productID, "productID");
+    console.log(choseComboProductList, "choseComboProductList");
+    console.log(choseTasteCategory, "choseTasteCategory");
+    console.log(tasteCategoryList, "tasteCategoryList");
+
+    /* const check = tasteCategoryList.filter(tasteCategory =>
+      choseTasteCategory.some(
+        category =>
+          tasteCategory.comboID === category.comboID &&
+          tasteCategory.comboProductID === category.comboProductID &&
+          category.index === comboProductIndex
+      )
+    ) */
+
+    const check = tasteCategoryList.filter(
+      tasteCategory =>
+        tasteCategory.IsMust === "1" &&
+        !choseTasteCategory.some(
+          category => tasteCategory.TasteCategoryID === category.tasteCategoryID
+        )
+    );
+
+    console.log(check, "check123");
+    console.log(choseComboProductList, "choseComboProductList");
+    if (check.length > 0) {
+      setChoseComboProductList(prevList =>
+        prevList.filter(
+          item =>
+            !(
+              item.comboProductID === productID &&
+              item.index === comboProductIndex
+            )
+        )
+      );
+      console.log("456");
+    }
+    setIsTasteClicked(!isTasteClicked);
+  };
 
   const read_comboProducts = (packageComboDataID, ComboName) => {
-    fetchComboProducts(packageComboDataID)
+    fetchComboProducts(packageComboDataID);
     setChoseComboList(prevList => [
       ...prevList.filter(item => item.comboID !== packageComboDataID),
       {
         comboID: packageComboDataID,
         comboName: ComboName,
       },
-    ])
-  }
+    ]);
+  };
 
   const openTaste = async (data, itemIndex) => {
-    if (!data || !data.ProductID) return
+    if (!data || !data.ProductID) return;
 
     const {
       PackageComboDataID,
@@ -238,28 +277,29 @@ export default function Home() {
       ProductName,
       ChooseMode,
       ChooseItemAmount,
-    } = data
-    setComboProductIndex(itemIndex)
+    } = data;
+    setComboProductIndex(itemIndex);
+    setComboProductID(ProductID);
     /* if (ChooseItemAmount === 1) {
     } */
-    removeTasteAndCategory(data, itemIndex)
+    removeTasteAndCategory(data, itemIndex);
 
     setChoseComboProductList(prevList => {
       const filteredItems = prevList.filter(
         item => item.comboID === PackageComboDataID
-      )
+      );
 
       /* const isMaxLimitReached = filteredItems.length >= ChooseItemAmount */
       const isExist = filteredItems.some(
         item => item.comboProductID === ProductID && item.index === itemIndex
-      )
+      );
 
-      let updatedList = prevList
+      let updatedList = prevList;
 
       // **ChooseMode === 2（必選，不可取消但可切換）**
       if (ChooseMode === 2) {
         if (isExist) {
-          return prevList
+          return prevList;
         }
         updatedList = [
           ...prevList.filter(item => item.comboID !== PackageComboDataID),
@@ -270,7 +310,7 @@ export default function Home() {
             index: itemIndex,
             chooseMode: 2,
           },
-        ]
+        ];
       }
 
       // **ChooseMode === 1（可選，可切換 & 取消）**
@@ -279,7 +319,7 @@ export default function Home() {
           updatedList = prevList.filter(
             item =>
               !(item.comboProductID === ProductID && item.index === itemIndex)
-          )
+          );
         } else {
           updatedList = [
             ...prevList.filter(
@@ -296,22 +336,22 @@ export default function Home() {
               index: itemIndex,
               chooseMode: 1,
             },
-          ]
+          ];
         }
       }
 
-      return updatedList
-    })
+      return updatedList;
+    });
 
     // **等到 setState 更新完後，透過 callback 執行 fetch**
     setTimeout(() => {
-      fetchProductTasteCategory(ProductID)
-      fetchTasteName(ProductID)
-    }, 0)
-  }
+      fetchProductTasteCategory(ProductID);
+      fetchTasteName(ProductID);
+    }, 0);
+  };
 
   const removeTasteAndCategory = (data, itemIndex) => {
-    if (!data || !data.ProductID) return
+    if (!data || !data.ProductID) return;
 
     setChoseTasteCategory(prevList =>
       prevList.filter(
@@ -322,7 +362,7 @@ export default function Home() {
             item.comboProductIndex === itemIndex
           )
       )
-    )
+    );
     setChoseTasteList(prevList =>
       prevList.filter(
         item =>
@@ -332,10 +372,10 @@ export default function Home() {
             item.comboProductIndex === itemIndex
           )
       )
-    )
-  }
+    );
+  };
   const cancelTasteAndCategory = (data, itemIndex) => {
-    if (!data || !data.ProductID) return
+    if (!data || !data.ProductID) return;
 
     setChoseComboProductList(prevList =>
       prevList.filter(
@@ -346,7 +386,7 @@ export default function Home() {
             item.index === itemIndex
           )
       )
-    )
+    );
 
     setChoseTasteCategory(prevList =>
       prevList.filter(
@@ -357,7 +397,7 @@ export default function Home() {
             item.comboProductIndex === itemIndex
           )
       )
-    )
+    );
     setChoseTasteList(prevList =>
       prevList.filter(
         item =>
@@ -367,30 +407,30 @@ export default function Home() {
             item.comboProductIndex === itemIndex
           )
       )
-    )
-  }
+    );
+  };
 
   const choseTaste = (tasteCategory, taste) => {
-    set_ctc(tasteCategory)
-    set_ctl(tasteCategory, taste)
-  }
+    set_ctc(tasteCategory);
+    set_ctl(tasteCategory, taste);
+  };
 
   const set_ctc = tasteCategory => {
-    if (!tasteCategory || !tasteCategory.TasteCategoryID) return
+    if (!tasteCategory || !tasteCategory.TasteCategoryID) return;
     setChoseTasteCategory(prevList => {
       // **取得當前 ProductID 內的已選擇項目**
       const filteredItems = prevList.filter(
         item => item.comboProductID === tasteCategory.ProductID
-      )
-      const isMaxLimitReached = filteredItems.length >= tasteCategory.Limit
+      );
+      const isMaxLimitReached = filteredItems.length >= tasteCategory.Limit;
       const isExist = filteredItems.some(
         item =>
           item.comboProductID === tasteCategory.ProductID &&
           item.tasteCategoryID === tasteCategory.TasteCategoryID &&
           item.comboProductIndex === comboProductIndex
-      )
+      );
 
-      let updatedTCList = prevList
+      let updatedTCList = prevList;
 
       // **處理 IsMust === "1"（必選模式）**
       if (tasteCategory.IsMust === "1") {
@@ -413,12 +453,12 @@ export default function Home() {
                   tasteCategoryID: tasteCategory.TasteCategoryID,
                   tasteCategoryName: tasteCategory.TasteCategoryName,
                 },
-              ]
+              ];
         } else {
           // **多選模式（可選多項，但不能超過上限）**
           if (isMaxLimitReached) {
-            alert("超過可選數量")
-            return prevList
+            alert("超過可選數量");
+            return prevList;
           }
 
           updatedTCList = isExist
@@ -434,7 +474,7 @@ export default function Home() {
                   tasteCategoryID: tasteCategory.TasteCategoryID,
                   tasteCategoryName: tasteCategory.TasteCategoryName,
                 },
-              ]
+              ];
         }
       }
 
@@ -465,12 +505,12 @@ export default function Home() {
                     tasteCategoryID: tasteCategory.TasteCategoryID,
                     tasteCategoryName: tasteCategory.TasteCategoryName,
                   },
-                ]
+                ];
         } else {
           // **多選模式（可選多項，不能超過上限）**
           if (isMaxLimitReached) {
-            alert("超過可選數量")
-            return prevList
+            alert("超過可選數量");
+            return prevList;
           }
 
           updatedTCList =
@@ -487,30 +527,30 @@ export default function Home() {
                     tasteCategoryID: tasteCategory.TasteCategoryID,
                     tasteCategoryName: tasteCategory.TasteCategoryName,
                   },
-                ]
+                ];
         }
       }
 
-      return updatedTCList
-    })
-  }
+      return updatedTCList;
+    });
+  };
 
   const set_ctl = (tasteCategory, taste) => {
-    if (!taste || !taste.TasteID) return
+    if (!taste || !taste.TasteID) return;
     setChoseTasteList(prevList => {
       const filteredItems = prevList.filter(
         item => item.tasteCategoryID === taste.TasteCategoryID
-      )
-      console.log(filteredItems, "filteredItems")
+      );
+      console.log(filteredItems, "filteredItems");
       const isExist = filteredItems.some(
         item =>
           item.tasteID === taste.TasteID &&
           item.tasteCategoryID === taste.TasteCategoryID &&
           item.comboProductIndex === comboProductIndex
-      )
-      let updatedList = prevList
+      );
+      let updatedList = prevList;
 
-      console.log(isExist, "isExist")
+      console.log(isExist, "isExist");
 
       // **處理 IsMust === "1"（必選模式）**
       if (tasteCategory.IsMust === "1") {
@@ -522,7 +562,7 @@ export default function Home() {
                   item.tasteID === taste.TasteID &&
                   item.comboProductIndex === comboProductIndex
                 )
-            )
+            );
           }
           // **單選模式（只能選 1 項，可切換）**
           updatedList = [
@@ -541,7 +581,7 @@ export default function Home() {
               tasteID: taste.TasteID,
               tasteName: taste.TasteName,
             },
-          ]
+          ];
         }
       }
       // **處理 IsMust === "0"（可選模式）**
@@ -556,7 +596,7 @@ export default function Home() {
                   item.tasteCategoryID === taste.TasteCategoryID &&
                   item.comboProductIndex === comboProductIndex
                 )
-            )
+            );
           } else {
             updatedList = [
               ...prevList.filter(
@@ -574,7 +614,7 @@ export default function Home() {
                 tasteID: taste.TasteID,
                 tasteName: taste.TasteName,
               },
-            ]
+            ];
           }
         } else {
           // **多選模式（允許選擇多個，但可取消）**
@@ -585,7 +625,7 @@ export default function Home() {
                   item.tasteID === taste.TasteID &&
                   item.comboProductIndex === comboProductIndex
                 )
-            )
+            );
           } else {
             // ✅ 如果未選擇，則新增
             updatedList = [
@@ -598,65 +638,82 @@ export default function Home() {
                 tasteID: taste.TasteID,
                 tasteName: taste.TasteName,
               },
-            ]
+            ];
           }
         }
       }
 
-      return updatedList
-    })
-  }
+      return updatedList;
+    });
+  };
 
   const saveTaste = () => {
-    const tasteCategory = tasteCategoryList.filter(t => t.IsMust === "1")
-    console.log(tasteCategory, "missingTaste")
+    const tasteCategory = tasteCategoryList.filter(t => t.IsMust === "1");
+    console.log(tasteCategory, "missingTaste");
     const missingTaste = tasteCategory.filter(
       taste =>
         !choseTasteList.some(
           chosen => chosen.tasteCategoryID === taste.TasteCategoryID
         )
-    )
+    );
 
-    console.log(missingTaste, "missingTaste")
+    console.log(missingTaste, "missingTaste");
     if (missingTaste.length > 0) {
-      showWarningAlert(`★ ${missingTaste[0].TasteCategoryName} ★ 必選尚未選擇`)
-      return
+      showWarningAlert(`★ ${missingTaste[0].TasteCategoryName} ★ 必選尚未選擇`);
+      return;
     }
-    setComboProductIndex()
-    setIsTasteClicked(!isTasteClicked)
-    handleScroll()
-  }
+    setComboProductIndex();
+    setComboProductID();
+    setIsTasteClicked(!isTasteClicked);
+    handleScroll();
+  };
 
   const add_count = () => {
-    setCount(prevState => prevState + 1)
+    setCount(prevState => prevState + 1);
     setChoseProduct(prevState => ({
       ...prevState,
       quantity: count + 1,
-    }))
-  }
+    }));
+  };
   const remove_count = () => {
-    setCount(prevState => Math.max(0, prevState - 1))
+    setCount(prevState => Math.max(0, prevState - 1));
     setChoseProduct(prevState => ({
       ...prevState,
       quantity: count - 1,
-    }))
-  }
+    }));
+  };
   const add_shopCart = () => {
     if (count < 1) {
-      showWarningAlert("請選擇數量")
-      return
+      showWarningAlert("請選擇數量");
+      return;
     }
 
-    const mandatoryCombos = comboList.filter(p => p.ChooseMode === 2)
+    const mandatoryCombos = comboList.filter(p => p.ChooseMode === 2);
     const missingCombos = mandatoryCombos.filter(
       combo =>
-        !choseComboList.some(
+        !choseComboProductList.some(
           chosen => chosen.comboID === combo.PackageComboDataID
         )
-    )
+    );
+    console.log(missingCombos, "missingCombos");
     if (missingCombos.length > 0) {
-      showWarningAlert(`★ ${missingCombos[0].ComboName} ★ 必選尚未選擇`)
-      return
+      showWarningAlert(`★ ${missingCombos[0].ComboName} ★ 必選尚未選擇`);
+      return;
+    }
+
+    const tasteCategory = choseComboProductList.filter(t => t.IsMust === "1");
+    console.log(tasteCategory, "tasteCategory");
+    const missingTaste = tasteCategory.filter(
+      taste =>
+        !choseTasteList.some(
+          chosen => chosen.tasteCategoryID === taste.TasteCategoryID
+        )
+    );
+
+    console.log(missingTaste, "missingTaste");
+    if (missingTaste.length > 0) {
+      showWarningAlert(`★ ${missingTaste[0].TasteCategoryName} ★ 必選尚未選擇`);
+      return;
     }
 
     setShopCartList(prevList => [
@@ -669,45 +726,49 @@ export default function Home() {
         tasteList: choseTasteList,
         quantity: count,
       },
-    ])
+    ]);
     // 清空
-    setChoseProduct([])
-    setIsTasteClicked(false)
-    setChoseComboList([])
-    setChoseComboProductList([])
-    setChoseTasteCategory([])
-    setChoseTasteList([])
-    showSuccessAlert("已加入至購物車", "可去購物車編輯預定商品", closeEditCombo)
-  }
+    setChoseProduct([]);
+    setIsTasteClicked(false);
+    setChoseComboList([]);
+    setChoseComboProductList([]);
+    setChoseTasteCategory([]);
+    setChoseTasteList([]);
+    showSuccessAlert(
+      "已加入至購物車",
+      "可去購物車編輯預定商品",
+      closeEditCombo
+    );
+  };
 
   const show_shopCartList = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" })
-    setIsEditShopCart(!isEditShopCart)
-  }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setIsEditShopCart(!isEditShopCart);
+  };
 
   const show_main = () => {
     if (!isShowMain) {
       if (!inputName) {
-        showWarningAlert("請輸入姓名")
-        return
+        showWarningAlert("請輸入姓名");
+        return;
       }
       if (!inputTel || !TelIsValid) {
-        showWarningAlert("請輸入有效的電話號碼")
-        return
+        showWarningAlert("請輸入有效的電話號碼");
+        return;
       }
       if (adultsNum < 1) {
-        showWarningAlert("請輸入人數")
-        return
+        showWarningAlert("請輸入人數");
+        return;
       }
       if (!reserveDate || !reserveTime) {
-        showWarningAlert("請選定日期及時間")
-        return
+        showWarningAlert("請選定日期及時間");
+        return;
       }
     }
-    setIsShowMain(!isShowMain)
-    fetchReserveMenu()
-  }
-  const submit_reserve = () => {}
+    setIsShowMain(!isShowMain);
+    fetchReserveMenu();
+  };
+  const submit_reserve = () => {};
 
   const removeItem = index => {
     Swal.fire({
@@ -725,20 +786,20 @@ export default function Home() {
           title: "成功",
           text: "已移除預定商品",
           icon: "success",
-        })
-        setShopCartList(prev => prev.filter((_, i) => i !== index))
+        });
+        setShopCartList(prev => prev.filter((_, i) => i !== index));
       }
-    })
-  }
+    });
+  };
   const updateQuantity = (index, newQuantity) => {
-    if (newQuantity < 1) return
+    if (newQuantity < 1) return;
 
     setShopCartList(prev =>
       prev.map((cartItem, i) =>
         i === index ? { ...cartItem, quantity: newQuantity } : cartItem
       )
-    )
-  }
+    );
+  };
 
   const showCheckAlert = () => {
     Swal.fire({
@@ -755,10 +816,10 @@ export default function Home() {
           title: "Deleted!",
           text: "Your file has been deleted.",
           icon: "success",
-        })
+        });
       }
-    })
-  }
+    });
+  };
   const showSuccessAlert = (title, text, callback) => {
     Swal.fire({
       title: title,
@@ -767,18 +828,18 @@ export default function Home() {
       confirmButtonText: "確定",
     }).then(result => {
       if (result.isConfirmed) {
-        callback()
+        callback();
       }
-    })
-  }
+    });
+  };
   const showWarningAlert = (title, text) => {
     Swal.fire({
       title: title,
       text: text,
       icon: "warning",
       confirmButtonText: "確定",
-    })
-  }
+    });
+  };
 
   const scrollToBoth = index => {
     if (comboItemRefs.current[index]) {
@@ -786,36 +847,36 @@ export default function Home() {
         behavior: "smooth",
         block: "nearest",
         inline: "center",
-      })
+      });
     }
     setTimeout(() => {
       targetRef.current?.scrollIntoView({
         behavior: "smooth",
         block: "start",
-      })
-    }, 300) // 100ms 後執行第二個滾動
-  }
+      });
+    }, 300); // 100ms 後執行第二個滾動
+  };
 
   useEffect(() => {
     const totalQuantity = shopCartList.reduce(
       (sum, item) => sum + item.quantity,
       0
-    )
-    setShopCartCount(totalQuantity)
-  }, [shopCartList])
+    );
+    setShopCartCount(totalQuantity);
+  }, [shopCartList]);
 
   useEffect(() => {
-    console.log(shopCartList, "shopCartList123")
-  }, [shopCartList])
+    console.log(shopCartList, "shopCartList123");
+  }, [shopCartList]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setIsShaking(true)
-      setTimeout(() => setIsShaking(false), 1000) // 震動 0.5 秒後停止
-    }, 5000) // 每 5 秒觸發一次
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 1000); // 震動 0.5 秒後停止
+    }, 5000); // 每 5 秒觸發一次
 
-    return () => clearInterval(interval)
-  }, [])
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <>
@@ -1150,8 +1211,8 @@ export default function Home() {
                       <button
                         className="w-full h-auto rounded-xl border p-2 hover:bg-slate-900"
                         onClick={() => {
-                          show_main()
-                          handleMenuNavScroll()
+                          show_main();
+                          handleMenuNavScroll();
                         }}
                       >
                         前往預定
@@ -1229,12 +1290,12 @@ export default function Home() {
                                         key={index}
                                         className="my-4"
                                         onClick={() => {
-                                          setComboListClicked(index)
+                                          setComboListClicked(index);
                                           read_comboProducts(
                                             item.PackageComboDataID,
                                             item.ComboName
-                                          )
-                                          scrollToBoth(index)
+                                          );
+                                          scrollToBoth(index);
                                         }}
                                       >
                                         <div className="w-36 text-white  cursor-pointer">
@@ -1260,7 +1321,9 @@ export default function Home() {
                                         <div>
                                           <button
                                             className=" w-auto text-white b p-2 ml-2 border-b-2 border-b-white "
-                                            onClick={closeTaste}
+                                            onClick={() =>
+                                              closeTaste(comboProductID)
+                                            }
                                           >
                                             ← 返回
                                           </button>
@@ -1295,7 +1358,7 @@ export default function Home() {
                                                       key={index}
                                                       className="flex items-center gap-3 px-4 py-4 rounded-3xl border-b-2 border-b-gray-500 cursor-pointer"
                                                       onClick={() => {
-                                                        choseTaste(item, i)
+                                                        choseTaste(item, i);
                                                       }}
                                                     >
                                                       <p
@@ -1328,8 +1391,7 @@ export default function Home() {
                                         <button
                                           className="w-2/3 h-10 rounded-full bg-slate-800 hover:bg-slate-900"
                                           onClick={() => {
-                                            saveTaste()
-                                            
+                                            saveTaste();
                                           }}
                                         >
                                           完成
@@ -1414,7 +1476,7 @@ export default function Home() {
                                                           className="ml-auto text-orange-100 hover:text-blue-700"
                                                           onClick={e => {
                                                             // e.stopPropagation() // 防止觸發外層 onClick
-                                                            scrollToBoth()
+                                                            scrollToBoth();
                                                           }}
                                                         >
                                                           {item.ChooseMode ===
@@ -1431,7 +1493,7 @@ export default function Home() {
                                                                 cancelTasteAndCategory(
                                                                   item,
                                                                   i
-                                                                )
+                                                                );
                                                               }}
                                                             >
                                                               取消
@@ -1443,7 +1505,7 @@ export default function Home() {
                                                                 openTaste(
                                                                   item,
                                                                   i
-                                                                )
+                                                                );
                                                               }}
                                                             >
                                                               選擇
@@ -1542,13 +1604,13 @@ export default function Home() {
                                 isShaking ? "animate-shake" : ""
                               } max-w-full h-12 p-2 m-2 text-nowrap cursor-pointer shadow-inner shadow-white rounded-2xl`}
                               onClick={() => {
-                                setMenuTypeClicked(index)
+                                setMenuTypeClicked(index);
                                 if (menuItemRefs.current[index]) {
                                   menuItemRefs.current[index].scrollIntoView({
                                     behavior: "smooth",
                                     block: "nearest",
                                     inline: "center",
-                                  })
+                                  });
                                 }
                               }}
                             >
@@ -1559,8 +1621,8 @@ export default function Home() {
                                     : "hover:border-b"
                                 }`}
                                 onClick={() => {
-                                  setMenuTypeClicked(index)
-                                  fetchMenuTypeList(item.product_type_id)
+                                  setMenuTypeClicked(index);
+                                  fetchMenuTypeList(item.product_type_id);
                                 }}
                               >
                                 {item.product_type_name}
@@ -1611,5 +1673,5 @@ export default function Home() {
         </main>
       </div>
     </>
-  )
+  );
 }
