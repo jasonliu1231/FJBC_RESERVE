@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import Swal from "sweetalert2";
 import { FaShoppingCart } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
+import { MdEdit } from "react-icons/md";
 
 export default function Home() {
   const [isShaking, setIsShaking] = useState(false);
@@ -949,21 +950,116 @@ export default function Home() {
                             key={index}
                             className="flex-col justify-between py-2 rounded-3xl border-b-4 border-gray-300"
                           >
+                            {/* 商品名稱 */}
                             <div className="flex gap-4">
                               <span className="text-emerald-200">
                                 {item.product_name}
                               </span>
-                              {item.meat_name && (
-                                <span className="text-pink-200">
-                                  {item.meat_name}
-                                </span>
+                            </div>
+
+                            {/* 套餐處理 */}
+                            <div className="p-4">
+                              {item.comboList.length > 0 ? (
+                                item.comboList.map((cl, index) => {
+                                  // 找到對應的產品
+                                  const matchedProducts =
+                                    item.comboProductList.filter(
+                                      cp => cp.comboID === cl.comboID
+                                    );
+
+                                  return (
+                                    <div key={index} className="text-rose-200">
+                                      {cl.comboName}：
+                                      {matchedProducts.length > 0 ? (
+                                        matchedProducts.map((cpl, idx) => (
+                                          <span
+                                            key={idx}
+                                            className="text-emerald-200 px-4"
+                                          >
+                                            {cpl.comboProductName}
+                                            {/* 口味選項 */}
+                                            {item.tasteCategory
+                                              .filter(
+                                                tc =>
+                                                  tc.comboProductID ===
+                                                    cpl.comboProductID &&
+                                                  tc.comboProductIndex ===
+                                                    cpl.index
+                                              )
+                                              .map((tc, index) => (
+                                                <div
+                                                  key={index}
+                                                  className="text-rose-200 px-4"
+                                                >
+                                                  {tc.tasteCategoryName && (
+                                                    <span>
+                                                      {tc.tasteCategoryName}
+                                                    </span>
+                                                  )}
+                                                  ：
+                                                  {item.tasteList
+                                                    .filter(
+                                                      tl =>
+                                                        tl.tasteCategoryID ===
+                                                          tc.tasteCategoryID &&
+                                                        tl.comboProductIndex ===
+                                                          tc.comboProductIndex
+                                                    )
+                                                    .map((tl, index) => (
+                                                      <span
+                                                        key={index}
+                                                        className="text-emerald-200 px-4"
+                                                      >
+                                                        {tl.tasteName}
+                                                      </span>
+                                                    ))}
+                                                </div>
+                                              ))}
+                                          </span>
+                                        ))
+                                      ) : (
+                                        <span className="text-gray-400 px-4">
+                                          無
+                                        </span>
+                                      )}
+                                    </div>
+                                  );
+                                })
+                              ) : (
+                                // 單品類商品（無套餐）
+                                <div className="text-rose-200">
+                                  {item.tasteCategory.map((tc, index) => (
+                                    <div
+                                      key={index}
+                                      className="text-rose-200 px-4"
+                                    >
+                                      {tc.tasteCategoryName}：
+                                      {item.tasteList
+                                        .filter(
+                                          tl =>
+                                            tl.tasteCategoryID ===
+                                            tc.tasteCategoryID
+                                        )
+                                        .map((tl, index) => (
+                                          <span
+                                            key={index}
+                                            className="text-emerald-200 px-4"
+                                          >
+                                            {tl.tasteName}
+                                          </span>
+                                        ))}
+                                    </div>
+                                  ))}
+                                </div>
                               )}
                             </div>
+
+                            {/* 數量控制 & 移除按鈕 */}
                             <div className="p-3 flex items-center justify-between">
                               <div className="flex items-center">
-                                <div className="mx-2 ">數量:</div>
+                                <div className="mx-2">數量:</div>
                                 <button
-                                  className="w-8 h-12 rounded-s-xl  border-t-2 border-l-2 border-b-2 border-orange-400 hover:bg-orange-400"
+                                  className="w-8 h-12 rounded-s-xl border-t-2 border-l-2 border-b-2 border-orange-400 hover:bg-orange-400"
                                   onClick={() =>
                                     updateQuantity(index, item.quantity - 1)
                                   }
@@ -974,7 +1070,7 @@ export default function Home() {
                                   <p>{item.quantity}</p>
                                 </div>
                                 <button
-                                  className="w-8 h-12 rounded-e-xl  border-t-2 border-r-2 border-b-2 border-orange-400 hover:bg-orange-400"
+                                  className="w-8 h-12 rounded-e-xl border-t-2 border-r-2 border-b-2 border-orange-400 hover:bg-orange-400"
                                   onClick={() =>
                                     updateQuantity(index, item.quantity + 1)
                                   }
@@ -987,9 +1083,7 @@ export default function Home() {
                                 className="flex items-center gap-1 cursor-pointer"
                                 onClick={() => removeItem(index)}
                               >
-                                <FaRegTrashCan
-                                  onClick={() => removeItem(index)}
-                                />
+                                <FaRegTrashCan />
                                 移除
                               </div>
                             </div>
