@@ -10,12 +10,13 @@ export default async function handler(req, res) {
       ptc.TasteCategoryID,
       tc.TasteCategoryName,
       t.TasteName,
+      t.AdjustmentPrice,
       t.TasteID,
       t.IsMulti
     FROM ProductTasteCategory ptc
 	  INNER JOIN TasteCategory tc on tc.TasteCategoryID = ptc.TasteCategoryID
 	  INNER JOIN Taste t ON t.TasteCategoryID = tc.TasteCategoryID
-    WHERE ptc.ProductID = @ProductID
+    WHERE ptc.ProductID = @ProductID AND t.IsVisibility = 1
     ORDER BY tc.OrderKey, t.OrderKey
     `
     const result = await pool_pos

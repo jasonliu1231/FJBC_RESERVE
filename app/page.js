@@ -38,8 +38,15 @@ export default function Home() {
   const [choseProduct, setChoseProduct] = useState();
 
   const [count, setCount] = useState(0);
+  const [totalPrice, setTotalPrice] = useState(0);
+  const [productPrice, setProductPrice] = useState(0);
+  const [ctPrice, setCtPrice] = useState(0);
+  const [cpPrice, setCpPrice] = useState(0);
+  const [shopCartPrice, setShopCartPrice] = useState(0);
   const [shopCartList, setShopCartList] = useState([]);
   const [isEditShopCart, setIsEditShopCart] = useState(false);
+  const [editShop, setEditShop] = useState(false);
+  const [shopCartIndex, setShopCartIndex] = useState(false);
   const [shopCartCount, setShopCartCount] = useState(null);
   const [isShowMain, setIsShowMain] = useState(false);
 
@@ -96,14 +103,13 @@ export default function Home() {
         throw new Error(`HTTP error! Status: ${res.status}`);
       }
       const data = await res.json();
-
-      setMenuDetailList([]);
       setMenuDetailList(data);
     } catch (error) {
       console.error("Error fetching products:", error);
     }
   };
-  const fetchMenuInfo = async product_id => {
+  const fetchMenuInfo = async product => {
+    const product_id = product.product_id;
     try {
       const res = await fetch(
         `/api/posProducts/checkPackage?productID=${product_id}`
@@ -115,6 +121,7 @@ export default function Home() {
       if (data.PackageDataID != null) {
         fetchComboList(data.PackageDataID);
       } else {
+        setProductPrice(product.price)
         fetchProductTasteCategory(product_id);
         fetchTasteName(product_id);
         setIsTasteClicked(!isTasteClicked);
@@ -126,6 +133,7 @@ export default function Home() {
         product_name: data.ProductName,
         product_type_name: data.MenuTypeName,
         quantity: 0,
+        price: 0,
       });
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -196,7 +204,7 @@ export default function Home() {
   };
 
   const openEditCombo = async data => {
-    fetchMenuInfo(data.product_id);
+    fetchMenuInfo(data);
     setCount(1);
     setChoseProduct();
   };
@@ -277,7 +285,9 @@ export default function Home() {
       ProductID,
       ProductName,
       ChooseMode,
-      ChooseItemAmount,
+      IndividPrice,
+      OriPrice,
+      ComboPriceMode,
     } = data;
     setComboProductIndex(itemIndex);
     setComboProductID(ProductID);
@@ -310,6 +320,7 @@ export default function Home() {
             comboProductName: ProductName,
             index: itemIndex,
             chooseMode: 2,
+            price: ComboPriceMode === 1 ? IndividPrice : OriPrice,
           },
         ];
       }
@@ -336,6 +347,7 @@ export default function Home() {
               comboProductName: ProductName,
               index: itemIndex,
               chooseMode: 1,
+              price: ComboPriceMode === 1 ? IndividPrice : OriPrice,
             },
           ];
         }
@@ -581,6 +593,7 @@ export default function Home() {
               tasteCategoryID: taste.TasteCategoryID,
               tasteID: taste.TasteID,
               tasteName: taste.TasteName,
+              price: taste.AdjustmentPrice,
             },
           ];
         }
@@ -614,6 +627,7 @@ export default function Home() {
                 tasteCategoryID: taste.TasteCategoryID,
                 tasteID: taste.TasteID,
                 tasteName: taste.TasteName,
+                price: taste.AdjustmentPrice,
               },
             ];
           }
@@ -638,6 +652,7 @@ export default function Home() {
                 tasteCategoryID: taste.TasteCategoryID,
                 tasteID: taste.TasteID,
                 tasteName: taste.TasteName,
+                price: taste.AdjustmentPrice,
               },
             ];
           }
@@ -683,10 +698,11 @@ export default function Home() {
       quantity: count - 1,
     }));
   };
-  const add_shopCart = () => {
+
+  const check_missing = () => {
     if (count < 1) {
       showWarningAlert("請選擇數量");
-      return;
+      return true; // 回傳 true 表示有錯誤
     }
 
     const mandatoryCombos = comboList.filter(p => p.ChooseMode === 2);
@@ -696,14 +712,13 @@ export default function Home() {
           chosen => chosen.comboID === combo.PackageComboDataID
         )
     );
-    console.log(missingCombos, "missingCombos");
+
     if (missingCombos.length > 0) {
       showWarningAlert(`★ ${missingCombos[0].ComboName} ★ 必選尚未選擇`);
-      return;
+      return true;
     }
 
     const tasteCategory = choseComboProductList.filter(t => t.IsMust === "1");
-    console.log(tasteCategory, "tasteCategory");
     const missingTaste = tasteCategory.filter(
       taste =>
         !choseTasteList.some(
@@ -711,10 +726,26 @@ export default function Home() {
         )
     );
 
-    console.log(missingTaste, "missingTaste");
     if (missingTaste.length > 0) {
       showWarningAlert(`★ ${missingTaste[0].TasteCategoryName} ★ 必選尚未選擇`);
-      return;
+      return true;
+    }
+
+    return false; // 沒有錯誤時回傳 false
+  };
+
+  const clear = () => {
+    setChoseProduct([]);
+    setIsTasteClicked(false);
+    setChoseComboList([]);
+    setChoseComboProductList([]);
+    setChoseTasteCategory([]);
+    setChoseTasteList([]);
+  };
+
+  const add_shopCart = () => {
+    if (check_missing()) {
+      return; // 如果 check_missing 回傳 true，則停止執行
     }
 
     setShopCartList(prevList => [
@@ -726,20 +757,38 @@ export default function Home() {
         tasteCategory: choseTasteCategory,
         tasteList: choseTasteList,
         quantity: count,
+        totalPrice: totalPrice,
       },
     ]);
     // 清空
-    setChoseProduct([]);
-    setIsTasteClicked(false);
-    setChoseComboList([]);
-    setChoseComboProductList([]);
-    setChoseTasteCategory([]);
-    setChoseTasteList([]);
+    clear();
     showSuccessAlert(
       "已加入至購物車",
       "可去購物車編輯預定商品",
       closeEditCombo
     );
+  };
+  const edit_shopCart = () => {
+    if (check_missing()) {
+      return; // 如果 check_missing 回傳 true，則停止執行
+    }
+    setShopCartList(prevList => {
+      const updatedList = [...prevList];
+      updatedList[shopCartIndex] = {
+        ...prevList[shopCartIndex],
+        ...choseProduct,
+        comboList: choseComboList,
+        comboProductList: choseComboProductList,
+        tasteCategory: choseTasteCategory,
+        tasteList: choseTasteList,
+        quantity: count,
+        totalPrice: totalPrice,
+      };
+      return updatedList;
+    });
+    setEditShop(!editShop);
+    clear();
+    showSuccessAlert("已更新購物車", "", closeEditCombo);
   };
 
   const show_shopCartList = () => {
@@ -770,6 +819,26 @@ export default function Home() {
     fetchReserveMenu();
   };
   const submit_reserve = () => {};
+
+  const editItem = (data, shopCartIndex) => {
+    console.log(data, "data");
+    setEditShop(!editShop);
+    setShopCartIndex(shopCartIndex);
+    setIsEditShopCart(!isEditShopCart);
+    setIsEditCombo(!isEditCombo);
+    setChoseProduct({
+      product_id: data.product_id,
+      product_name: data.product_name,
+      product_type_name: data.product_type_name,
+    });
+    setCount(data.quantity);
+    fetchMenuInfo(data.product_id);
+    setComboProductID(data.product_id);
+    setChoseComboList(data.comboList);
+    setChoseComboProductList(data.comboProductList);
+    setChoseTasteCategory(data.tasteCategory);
+    setChoseTasteList(data.tasteList);
+  };
 
   const removeItem = index => {
     Swal.fire({
@@ -834,6 +903,7 @@ export default function Home() {
     });
   };
   const showWarningAlert = (title, text) => {
+    console.log("showWarningAlert");
     Swal.fire({
       title: title,
       text: text,
@@ -867,6 +937,37 @@ export default function Home() {
   }, [shopCartList]);
 
   useEffect(() => {
+    const newCtPrice = choseTasteList.reduce(
+      (sum, product) => sum + product.price,
+      0
+    );
+    setCtPrice(newCtPrice);
+  }, [choseTasteList]);
+
+  useEffect(() => {
+    const newCpPrice = choseComboProductList.reduce(
+      (sum, product) => sum + product.price,
+      0
+    );
+    setCpPrice(newCpPrice);
+  }, [choseComboProductList]);
+
+  useEffect(() => {
+    console.log("productPrice:", productPrice);
+    console.log("ctPrice:", ctPrice);
+    console.log("cpPrice:", cpPrice);
+    console.log("Total:", productPrice + ctPrice + cpPrice);
+  
+    setTotalPrice(productPrice + ctPrice + cpPrice);
+  }, [ctPrice, cpPrice, productPrice]);
+  
+
+  useEffect(() => {
+    const newShopCartPrice = shopCartList.reduce(
+      (sum, product) => sum + (product.totalPrice * product.quantity),
+      0
+    );
+    setShopCartPrice(newShopCartPrice)
     console.log(shopCartList, "shopCartList123");
   }, [shopCartList]);
 
@@ -886,14 +987,12 @@ export default function Home() {
         <div className="z-50 sticky top-0  w-full h-16 bg-[#2c4457] flex justify-around items-center border-b-2">
           {/* 左側區域：Logo 和 店名 */}
           <div className="flex items-center space-x-4">
-            <a href="">
-              <img
-                src="/cafelux_logo.png"
-                alt="CAFELUX Logo"
-                className="rounded-xl w-10"
-                href="http://localhost:3000/#"
-              />
-            </a>
+            <img
+              src="/CAFELUX_ICON-1.png"
+              alt="CAFELUX_ICON-1"
+              className="rounded-xl w-10"
+              href="http://localhost:3000/#"
+            />
 
             <span className="text-lg font-bold truncate w-full sm:w-full md:w-full lg:w-full xl:w-full">
               CAFELUX 太平咖啡美食
@@ -957,101 +1056,137 @@ export default function Home() {
                               </span>
                             </div>
 
-                            {/* 套餐處理 */}
-                            <div className="p-4">
-                              {item.comboList.length > 0 ? (
-                                item.comboList.map((cl, index) => {
-                                  // 找到對應的產品
-                                  const matchedProducts =
-                                    item.comboProductList.filter(
-                                      cp => cp.comboID === cl.comboID
-                                    );
+                            <div className="flex justify-between">
+                              {/* 套餐處理 */}
+                              <div className="p-4 grow w-2/3">
+                                {item.comboList.length > 0 ? (
+                                  item.comboList.map((cl, index) => {
+                                    // 找到對應的產品
+                                    const matchedProducts =
+                                      item.comboProductList.filter(
+                                        cp => cp.comboID === cl.comboID
+                                      );
 
-                                  return (
-                                    <div key={index} className="text-rose-200">
-                                      {cl.comboName}：
-                                      {matchedProducts.length > 0 ? (
-                                        matchedProducts.map((cpl, idx) => (
-                                          <span
-                                            key={idx}
-                                            className="text-emerald-200 px-4"
-                                          >
-                                            {cpl.comboProductName}
-                                            {/* 口味選項 */}
-                                            {item.tasteCategory
-                                              .filter(
-                                                tc =>
-                                                  tc.comboProductID ===
-                                                    cpl.comboProductID &&
-                                                  tc.comboProductIndex ===
-                                                    cpl.index
-                                              )
-                                              .map((tc, index) => (
-                                                <div
-                                                  key={index}
-                                                  className="text-rose-200 px-4"
-                                                >
-                                                  {tc.tasteCategoryName && (
-                                                    <span>
-                                                      {tc.tasteCategoryName}
-                                                    </span>
-                                                  )}
-                                                  ：
-                                                  {item.tasteList
-                                                    .filter(
+                                    return (
+                                      <div
+                                        key={index}
+                                        className="text-rose-200"
+                                      >
+                                        {cl.comboName}：
+                                        {matchedProducts.length > 0 ? (
+                                          matchedProducts.map((cpl, idx) => (
+                                            <span
+                                              key={idx}
+                                              className="text-emerald-200 px-2"
+                                            >
+                                              {cpl.comboProductName}
+                                              {/* 口味選項 */}
+                                              {item.tasteCategory
+                                                .filter(
+                                                  tc =>
+                                                    tc.comboProductID ===
+                                                      cpl.comboProductID &&
+                                                    tc.comboProductIndex ===
+                                                      cpl.index
+                                                )
+                                                .map((tc, index) => {
+                                                  const matchedTastes =
+                                                    item.tasteList.filter(
                                                       tl =>
                                                         tl.tasteCategoryID ===
                                                           tc.tasteCategoryID &&
                                                         tl.comboProductIndex ===
                                                           tc.comboProductIndex
-                                                    )
-                                                    .map((tl, index) => (
-                                                      <span
-                                                        key={index}
-                                                        className="text-emerald-200 px-4"
-                                                      >
-                                                        {tl.tasteName}
-                                                      </span>
-                                                    ))}
-                                                </div>
-                                              ))}
+                                                    );
+
+                                                  return (
+                                                    <div
+                                                      key={index}
+                                                      className="text-white px-4"
+                                                    >
+                                                      {tc.tasteCategoryName && (
+                                                        <span>
+                                                          {tc.tasteCategoryName}
+                                                        </span>
+                                                      )}
+                                                      ：
+                                                      {matchedTastes.length >
+                                                      0 ? (
+                                                        matchedTastes.map(
+                                                          (tl, index) => (
+                                                            <span
+                                                              key={index}
+                                                              className="text-emerald-200 px-2"
+                                                            >
+                                                              {tl.tasteName
+                                                                ? tl.tasteName
+                                                                : "無"}
+                                                            </span>
+                                                          )
+                                                        )
+                                                      ) : (
+                                                        <span className="text-gray-400 px-2">
+                                                          無
+                                                        </span>
+                                                      )}
+                                                    </div>
+                                                  );
+                                                })}
+                                            </span>
+                                          ))
+                                        ) : (
+                                          <span className="text-gray-400 px-2">
+                                            無
                                           </span>
-                                        ))
-                                      ) : (
-                                        <span className="text-gray-400 px-4">
-                                          無
-                                        </span>
-                                      )}
-                                    </div>
-                                  );
-                                })
-                              ) : (
-                                // 單品類商品（無套餐）
-                                <div className="text-rose-200">
-                                  {item.tasteCategory.map((tc, index) => (
-                                    <div
-                                      key={index}
-                                      className="text-rose-200 px-4"
-                                    >
-                                      {tc.tasteCategoryName}：
-                                      {item.tasteList
-                                        .filter(
+                                        )}
+                                      </div>
+                                    );
+                                  })
+                                ) : (
+                                  // 單品類商品（無套餐）
+                                  <div className="text-rose-200">
+                                    {item.tasteCategory.map((tc, index) => {
+                                      const matchedTastes =
+                                        item.tasteList.filter(
                                           tl =>
                                             tl.tasteCategoryID ===
                                             tc.tasteCategoryID
-                                        )
-                                        .map((tl, index) => (
-                                          <span
-                                            key={index}
-                                            className="text-emerald-200 px-4"
-                                          >
-                                            {tl.tasteName}
-                                          </span>
-                                        ))}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
+                                        );
+
+                                      return (
+                                        <div
+                                          key={index}
+                                          className="text-rose-200 px-4"
+                                        >
+                                          {tc.tasteCategoryName}：
+                                          {matchedTastes.length > 0 ? (
+                                            matchedTastes.map((tl, index) => (
+                                              <span
+                                                key={index}
+                                                className="text-emerald-200 px-2"
+                                              >
+                                                {tl.tasteName}
+                                              </span>
+                                            ))
+                                          ) : (
+                                            <span className="text-gray-400 px-2">
+                                              無
+                                            </span>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+
+                              <div
+                                className="w-1/3 flex justify-end items-center mr-4 cursor-pointer"
+                                onClick={() => editItem(item, index)}
+                              >
+                                <MdEdit className="" />
+                                編輯
+                              </div>
                             </div>
 
                             {/* 數量控制 & 移除按鈕 */}
@@ -1078,6 +1213,7 @@ export default function Home() {
                                   ＋
                                 </button>
                               </div>
+                              <div>金額: {item.quantity * item.totalPrice}</div>
 
                               <div
                                 className="flex items-center gap-1 cursor-pointer"
@@ -1094,10 +1230,11 @@ export default function Home() {
 
                     <div className="fixed bottom-0 left-0 w-full p-4 shadow-inner">
                       <button
-                        className="flex w-full h-14 p-10 text-xl border-b-4 bg-[#192631] rounded-xl justify-center items-center"
+                        className="flex gap-4 w-full h-14 p-10 text-xl border-b-4 bg-[#192631] rounded-xl justify-center items-center"
                         onClick={submit_reserve}
                       >
-                        送出
+                        <p>送出</p>
+                        <p>小計: {shopCartPrice}</p>
                       </button>
                     </div>
                   </div>
@@ -1455,7 +1592,7 @@ export default function Home() {
                                                         choseTaste(item, i);
                                                       }}
                                                     >
-                                                      <p
+                                                      <div
                                                         className={`${
                                                           choseTasteList.some(
                                                             ctl =>
@@ -1473,7 +1610,11 @@ export default function Home() {
                                                         }`}
                                                       >
                                                         {i.TasteName}
-                                                      </p>
+                                                        <p>
+                                                          NT${" "}
+                                                          {i.AdjustmentPrice}.
+                                                        </p>
+                                                      </div>
                                                     </div>
                                                   ))}
                                               </div>
@@ -1545,6 +1686,14 @@ export default function Home() {
                                                           }`}
                                                         >
                                                           {item.ProductName}
+                                                          <p>
+                                                            NT$
+                                                            {item.ComboPriceMode ==
+                                                            1
+                                                              ? item.IndividPrice
+                                                              : item.OriPrice}
+                                                            .
+                                                          </p>
                                                           {choseTasteList
                                                             .filter(
                                                               ctl =>
@@ -1562,6 +1711,14 @@ export default function Home() {
                                                                   {
                                                                     item.tasteName
                                                                   }
+
+                                                                  <p>
+                                                                    NT$
+                                                                    {
+                                                                      item?.price
+                                                                    }
+                                                                    .
+                                                                  </p>
                                                                 </li>
                                                               )
                                                             )}
@@ -1639,12 +1796,21 @@ export default function Home() {
                                     </button>
                                   </div>
                                   <div className="fixed bottom-0 left-0 w-full h-20 mt-8 py-4 flex justify-center bg-[#2c4457]">
-                                    <button
-                                      className="w-2/3 rounded-full bg-slate-800 hover:bg-slate-900"
-                                      onClick={add_shopCart}
-                                    >
-                                      新增至購物車
-                                    </button>
+                                    {editShop ? (
+                                      <button
+                                        className="w-2/3 rounded-full bg-slate-800 hover:bg-slate-900"
+                                        onClick={edit_shopCart}
+                                      >
+                                        更新購物車 小計: {totalPrice}
+                                      </button>
+                                    ) : (
+                                      <button
+                                        className="w-2/3 rounded-full bg-slate-800 hover:bg-slate-900"
+                                        onClick={add_shopCart}
+                                      >
+                                        新增至購物車 小計: {totalPrice}
+                                      </button>
+                                    )}
                                   </div>
                                 </div>
                               )}
@@ -1736,6 +1902,7 @@ export default function Home() {
                                 <div className="w-3/5 h-full flex items-center justify-start px-3">
                                   <div className="text-black">
                                     {item.product_name}
+                                    <p>NT$ {item.price}.</p>
                                   </div>
                                 </div>
                                 <div className="w-2/5 h-full ">
@@ -1745,7 +1912,7 @@ export default function Home() {
                                         ? `data:image/jpg;base64,${Buffer.from(
                                             item.product_images
                                           ).toString("base64")}`
-                                        : "/cafelux_logo.png" // 替換為你的預設圖片路徑
+                                        : "/CAFELUX_ICON-1.png" // 替換為你的預設圖片路徑
                                     }
                                     alt="productImage"
                                     className="rounded-xl w-40 h-40"

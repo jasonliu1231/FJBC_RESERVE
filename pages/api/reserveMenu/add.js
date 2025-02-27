@@ -11,6 +11,7 @@ export default async function handler(req, res) {
         ProductImages,
         mt_OrderKey,
         mi_OrderKey,
+        Price,
       } = req.body
       
       const imageBuffer = ProductImages ? Buffer.from(ProductImages, "base64") : null; // 轉換為 Buffer
@@ -31,9 +32,10 @@ export default async function handler(req, res) {
               product_type_name, 
               type_order_key, 
               product_order_key, 
-              product_images
+              product_images,
+              price
             ) 
-            VALUES($1, $2, $3, $4, $5, $6, $7)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8)
           `
           const params = [
             ProductID,
@@ -43,6 +45,7 @@ export default async function handler(req, res) {
             mt_OrderKey,
             mi_OrderKey,
             imageBuffer,
+            Price,
           ]
           await pool_pg.query(sql, params)
         }

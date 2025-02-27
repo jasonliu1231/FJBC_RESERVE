@@ -13,7 +13,7 @@ export default async function handler(req, res) {
         tc.Limit
       FROM ProductTasteCategory ptc
 	    INNER JOIN TasteCategory tc ON tc.TasteCategoryID = ptc.TasteCategoryID
-      WHERE ptc.ProductID = @ProductID
+      WHERE ptc.ProductID = @ProductID AND tc.IsVisiblity = 1
       ORDER BY tc.OrderKey
     `
     const result = await pool_pos

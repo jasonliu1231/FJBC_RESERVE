@@ -12,7 +12,8 @@ export default async function handler(req, res) {
         mt.MenuTypeName,
         pi.ProductImages,
         mt.OrderKey as mt_OrderKey,
-        mi.OrderKey as mi_OrderKey
+        mi.OrderKey as mi_OrderKey,
+        p.Price
       FROM MenuType mt
       INNER JOIN MenuItem mi ON mi.MenuTypeID = mt.MenuTypeID
       INNER JOIN Products p ON p.ProductID = mi.ProductID
