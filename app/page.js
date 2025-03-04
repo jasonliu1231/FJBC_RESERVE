@@ -1028,7 +1028,7 @@ export default function Home() {
                     </button>
                     <p className="text-2xl text-center">預定列表</p>
                     <div className="flex flex-1 overflow-hidden">
-                      <ul className="w-full max-h-[calc(100vh-300px)] overflow-y-scroll scrollbar-custom">
+                      <ul className="w-full max-h-[calc(100vh-400px)] overflow-y-scroll scrollbar-custom">
                         {shopCartList.map((item, index) => (
                           <li
                             key={index}
