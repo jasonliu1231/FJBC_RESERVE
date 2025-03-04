@@ -9,21 +9,22 @@ import { MdEdit } from "react-icons/md";
 export default function Home() {
   const [isShaking, setIsShaking] = useState(false);
   // 預約者姓名
-  const [inputName, setInputName] = useState("0");
-  const [inputTel, setInputTel] = useState("0979536456");
+  const [inputName, setInputName] = useState("張");
+  const [inputTel, setInputTel] = useState("0912345678");
   const [TelIsValid, setTelIsValid] = useState(true);
   const [adultsNum, setAdultsNum] = useState(1);
   const [childrenNum, setChildrenNum] = useState(0);
-  const [reserveDate, setReserveDate] = useState("2024-02-07");
-  const [reserveTime, setReserveTime] = useState("1028");
+  const [reserveDate, setReserveDate] = useState("0304");
+  const [reserveTime, setReserveTime] = useState("1530");
 
   const [menuGroupList, setMenuGroupList] = useState([]);
-  const [menuTypeClicked, setMenuTypeClicked] = useState();
+  const [menuTypeClicked, setMenuTypeClicked] = useState(0);
   const [menuDetailList, setMenuDetailList] = useState([]);
   const [isEditCombo, setIsEditCombo] = useState(false);
 
   const [comboList, setComboList] = useState([]);
-  const [comboListClicked, setComboListClicked] = useState();
+  const [comboListClicked, setComboListClicked] = useState(0);
+  const [prevComboClicked, setPrevComboClicked] = useState(0);
   const [comboProducts, setComboProducts] = useState([]);
   const [tasteCategoryList, setTasteCategoryList] = useState([]);
   const [tasteList, setTasteList] = useState([]);
@@ -49,10 +50,12 @@ export default function Home() {
   const [shopCartIndex, setShopCartIndex] = useState(false);
   const [shopCartCount, setShopCartCount] = useState(null);
   const [isShowMain, setIsShowMain] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(5); // 預設顯示5筆
 
   const targetRef = useRef(null);
   const menuItemRefs = useRef([]);
   const comboItemRefs = useRef([]);
+  const topRefs = useRef(null);
   const menuNavRef = useRef(null);
 
   const handleScroll = () => {
@@ -89,6 +92,7 @@ export default function Home() {
       const res = await fetch("/api/reserveMenu/menuGroup");
       const data = await res.json();
       setMenuGroupList(data);
+      fetchMenuTypeList(data[0]?.product_type_id);
     } catch (error) {
       console.error("Error fetching products:", error);
     }
@@ -121,7 +125,7 @@ export default function Home() {
       if (data.PackageDataID != null) {
         fetchComboList(data.PackageDataID);
       } else {
-        setProductPrice(product.price)
+        setProductPrice(product.price);
         fetchProductTasteCategory(product_id);
         fetchTasteName(product_id);
         setIsTasteClicked(!isTasteClicked);
@@ -149,6 +153,8 @@ export default function Home() {
       }
       const data = await res.json();
       setComboList(data);
+      setComboListClicked(0);
+      read_comboProducts(data[0]?.PackageComboDataID, data[0]?.ComboName);
     } catch (error) {
       console.error("Error fetching products:", error);
     }
@@ -202,11 +208,16 @@ export default function Home() {
       console.error("Error fetching products:", error);
     }
   };
-
   const openEditCombo = async data => {
     fetchMenuInfo(data);
     setCount(1);
     setChoseProduct();
+    if (topRefs.current) {
+      topRefs.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
   };
   const closeEditCombo = () => {
     setCount(1);
@@ -227,20 +238,6 @@ export default function Home() {
   };
 
   const closeTaste = async productID => {
-    console.log(productID, "productID");
-    console.log(choseComboProductList, "choseComboProductList");
-    console.log(choseTasteCategory, "choseTasteCategory");
-    console.log(tasteCategoryList, "tasteCategoryList");
-
-    /* const check = tasteCategoryList.filter(tasteCategory =>
-      choseTasteCategory.some(
-        category =>
-          tasteCategory.comboID === category.comboID &&
-          tasteCategory.comboProductID === category.comboProductID &&
-          category.index === comboProductIndex
-      )
-    ) */
-
     const check = tasteCategoryList.filter(
       tasteCategory =>
         tasteCategory.IsMust === "1" &&
@@ -248,9 +245,6 @@ export default function Home() {
           category => tasteCategory.TasteCategoryID === category.tasteCategoryID
         )
     );
-
-    console.log(check, "check123");
-    console.log(choseComboProductList, "choseComboProductList");
     if (check.length > 0) {
       setChoseComboProductList(prevList =>
         prevList.filter(
@@ -261,7 +255,6 @@ export default function Home() {
             )
         )
       );
-      console.log("456");
     }
     setIsTasteClicked(!isTasteClicked);
   };
@@ -279,7 +272,6 @@ export default function Home() {
 
   const openTaste = async (data, itemIndex) => {
     if (!data || !data.ProductID) return;
-
     const {
       PackageComboDataID,
       ProductID,
@@ -291,8 +283,6 @@ export default function Home() {
     } = data;
     setComboProductIndex(itemIndex);
     setComboProductID(ProductID);
-    /* if (ChooseItemAmount === 1) {
-    } */
     removeTasteAndCategory(data, itemIndex);
 
     setChoseComboProductList(prevList => {
@@ -554,7 +544,6 @@ export default function Home() {
       const filteredItems = prevList.filter(
         item => item.tasteCategoryID === taste.TasteCategoryID
       );
-      console.log(filteredItems, "filteredItems");
       const isExist = filteredItems.some(
         item =>
           item.tasteID === taste.TasteID &&
@@ -562,8 +551,6 @@ export default function Home() {
           item.comboProductIndex === comboProductIndex
       );
       let updatedList = prevList;
-
-      console.log(isExist, "isExist");
 
       // **處理 IsMust === "1"（必選模式）**
       if (tasteCategory.IsMust === "1") {
@@ -665,15 +652,12 @@ export default function Home() {
 
   const saveTaste = () => {
     const tasteCategory = tasteCategoryList.filter(t => t.IsMust === "1");
-    console.log(tasteCategory, "missingTaste");
     const missingTaste = tasteCategory.filter(
       taste =>
         !choseTasteList.some(
           chosen => chosen.tasteCategoryID === taste.TasteCategoryID
         )
     );
-
-    console.log(missingTaste, "missingTaste");
     if (missingTaste.length > 0) {
       showWarningAlert(`★ ${missingTaste[0].TasteCategoryName} ★ 必選尚未選擇`);
       return;
@@ -810,21 +794,31 @@ export default function Home() {
         showWarningAlert("請輸入人數");
         return;
       }
+
       if (!reserveDate || !reserveTime) {
         showWarningAlert("請選定日期及時間");
+        return;
+      }
+
+      const selectedDateTime = new Date(`${reserveDate}T${reserveTime}`);
+      const currentDateTime = new Date();
+
+      if (selectedDateTime.getTime() <= currentDateTime.getTime()) {
+        showWarningAlert("請選擇未來的日期與時間");
         return;
       }
     }
     setIsShowMain(!isShowMain);
     fetchReserveMenu();
   };
-  const submit_reserve = () => {};
+  const submit_reserve = () => {
+    console.log(shopCartList, 'shopCartList')
+  };
 
   const editItem = (data, shopCartIndex) => {
-    console.log(data, "data");
     setEditShop(!editShop);
     setShopCartIndex(shopCartIndex);
-    setIsEditShopCart(!isEditShopCart);
+    setIsEditShopCart(false);
     setIsEditCombo(!isEditCombo);
     setChoseProduct({
       product_id: data.product_id,
@@ -832,7 +826,9 @@ export default function Home() {
       product_type_name: data.product_type_name,
     });
     setCount(data.quantity);
-    fetchMenuInfo(data.product_id);
+
+    fetchMenuInfo(data);
+
     setComboProductID(data.product_id);
     setChoseComboList(data.comboList);
     setChoseComboProductList(data.comboProductList);
@@ -870,26 +866,6 @@ export default function Home() {
       )
     );
   };
-
-  const showCheckAlert = () => {
-    Swal.fire({
-      title: "確定是否移除?",
-      text: "刪除將會整筆移除",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
-    }).then(result => {
-      if (result.isConfirmed) {
-        Swal.fire({
-          title: "Deleted!",
-          text: "Your file has been deleted.",
-          icon: "success",
-        });
-      }
-    });
-  };
   const showSuccessAlert = (title, text, callback) => {
     Swal.fire({
       title: title,
@@ -903,7 +879,6 @@ export default function Home() {
     });
   };
   const showWarningAlert = (title, text) => {
-    console.log("showWarningAlert");
     Swal.fire({
       title: title,
       text: text,
@@ -912,20 +887,28 @@ export default function Home() {
     });
   };
 
-  const scrollToBoth = index => {
-    if (comboItemRefs.current[index]) {
-      comboItemRefs.current[index].scrollIntoView({
+  const scrollToBoth = (now, total) => {
+    if (
+      comboListClicked !== null &&
+      comboListClicked + 1 !== prevComboClicked &&
+      now + 1 === total
+    ) {
+      setTimeout(() => {
+        if (comboList.length > comboListClicked + 1) {
+          setPrevComboClicked(comboListClicked + 1);
+          setComboListClicked(comboListClicked + 1);
+          read_comboProducts(
+            comboList[comboListClicked + 1]?.PackageComboDataID,
+            comboList[comboListClicked + 1]?.ComboName
+          );
+        }
+      }, 200);
+      comboItemRefs.current[comboListClicked]?.scrollIntoView({
         behavior: "smooth",
-        block: "nearest",
-        inline: "center",
+        block: "center",
       });
     }
-    setTimeout(() => {
-      targetRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 300); // 100ms 後執行第二個滾動
+    return;
   };
 
   useEffect(() => {
@@ -935,6 +918,15 @@ export default function Home() {
     );
     setShopCartCount(totalQuantity);
   }, [shopCartList]);
+
+  useEffect(() => {
+    if (tasteCategoryList.length > 0 && topRefs.current) {
+      topRefs.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [tasteCategoryList]);
 
   useEffect(() => {
     const newCtPrice = choseTasteList.reduce(
@@ -953,22 +945,15 @@ export default function Home() {
   }, [choseComboProductList]);
 
   useEffect(() => {
-    console.log("productPrice:", productPrice);
-    console.log("ctPrice:", ctPrice);
-    console.log("cpPrice:", cpPrice);
-    console.log("Total:", productPrice + ctPrice + cpPrice);
-  
     setTotalPrice(productPrice + ctPrice + cpPrice);
   }, [ctPrice, cpPrice, productPrice]);
-  
 
   useEffect(() => {
     const newShopCartPrice = shopCartList.reduce(
-      (sum, product) => sum + (product.totalPrice * product.quantity),
+      (sum, product) => sum + product.totalPrice * product.quantity,
       0
     );
-    setShopCartPrice(newShopCartPrice)
-    console.log(shopCartList, "shopCartList123");
+    setShopCartPrice(newShopCartPrice);
   }, [shopCartList]);
 
   useEffect(() => {
@@ -988,8 +973,8 @@ export default function Home() {
           {/* 左側區域：Logo 和 店名 */}
           <div className="flex items-center space-x-4">
             <img
-              src="/CAFELUX_ICON-1.png"
-              alt="CAFELUX_ICON-1"
+              src="/CAFELUX_ICON-2.png"
+              alt="CAFELUX_ICON-2"
               className="rounded-xl w-10"
               href="http://localhost:3000/#"
             />
@@ -1284,7 +1269,7 @@ export default function Home() {
                 {/* 訂位人資訊 */}
                 {isShowMain ? (
                   <div className="p-4 text-lg">
-                    <div className="">
+                    {/* <div className="">
                       <div>
                         <span className="">預約姓名:</span>
                         <span className="ml-2 text-teal-200">{inputName}</span>
@@ -1314,7 +1299,7 @@ export default function Home() {
                           </span>
                         </span>
                       </div>
-                    </div>
+                    </div> */}
                     <div className="w-full py-2 flex gap-2">
                       <div className="w-1/2">
                         <p>預約日期:</p>
@@ -1333,7 +1318,10 @@ export default function Home() {
                       >
                         編輯
                       </button>
-                      <div className="flex justify-center items-center mt-4">
+                      <div
+                        ref={topRefs}
+                        className="flex justify-center items-center mt-4"
+                      >
                         <div className=" animate-bounce">↓</div>
                         <span className="text-cyan-300">
                           選擇您要預訂的餐點
@@ -1386,7 +1374,6 @@ export default function Home() {
                         {!inputTel && (
                           <p className="text-red-500"> 請輸入手機號碼 </p>
                         )}
-                        {inputTel}
                       </div>
                       {!TelIsValid && (
                         <p className="text-red-500 text-sm mt-2">
@@ -1417,25 +1404,23 @@ export default function Home() {
                     </div>
                     <div className="w-full py-2 flex gap-2">
                       <div className="w-1/2 py-2 ">
-                        <span>預約日期:</span>
+                        <div>預約日期:</div>
                         <input
                           type="date"
                           value={reserveDate}
                           onChange={e => setReserveDate(e.target.value)}
                           className="w-full text-black p-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                         ></input>
-                        {reserveDate}
                       </div>
 
                       <div className="w-1/2 py-2">
-                        <span>預約時間:</span>
+                        <div>預約時間:</div>
                         <input
                           type="time"
                           value={reserveTime}
                           onChange={e => setReserveTime(e.target.value)}
                           className="w-full text-black p-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                         ></input>
-                        {reserveTime}
                       </div>
                     </div>
                     <div className="flex justify-center items-center">
@@ -1465,93 +1450,84 @@ export default function Home() {
                                     className=" w-auto text-white b p-2 ml-2 border-b-2 border-b-white sticky"
                                     onClick={closeEditCombo}
                                   >
-                                    ← 返回
+                                    ← 返回主選單
                                   </button>
                                 </div>
                                 <div className="text-white p-4 text-lg">
                                   {choseProduct.product_name}
-                                  <div className="bg-gray-950/30 text-amber-500 text-sm rounded-xl p-2 space-y-1 grid">
-                                    {choseComboProductList.map(
-                                      (item, index) => (
-                                        <div key={index}>
-                                          {item.comboProductName}
-                                        </div>
-                                      )
-                                    )}
-                                    {/* {Array.from(
-                                      new Map(
-                                        choseTasteCategory.map(item => [
-                                          item.tasteCategoryID,
-                                          item,
-                                        ])
-                                      ).values()
-                                    ).map((category, index) => (
-                                      <div
-                                        key={index}
-                                        className="text-sm text-rose-300"
-                                      >
-                                        {category.tasteCategoryName}
-                                        {choseTasteList
-                                          .filter(
-                                            i =>
-                                              i.tasteCategoryID ===
-                                              category.tasteCategoryID
+                                  <div className=" bg-gray-950/30 text-amber-500 text-sm rounded-xl p-2 space-y-1 grid">
+                                    {choseComboProductList.length > 0 ? (
+                                      <div>
+                                        {choseComboProductList.map(
+                                          (item, index) => (
+                                            <div key={index}>
+                                              {item.comboProductName}
+                                            </div>
                                           )
-                                          .map((taste, index) => (
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <div
+                                        className="cursor-pointer"
+                                        onClick={() =>
+                                          setIsTasteClicked(!isTasteClicked)
+                                        }
+                                      >
+                                        {choseTasteCategory.map((tc, index) => {
+                                          const matchedTastes =
+                                            choseTasteList.filter(
+                                              tl =>
+                                                tl.tasteCategoryID ===
+                                                  tc.tasteCategoryID &&
+                                                tl.comboProductIndex ===
+                                                  tc.comboProductIndex
+                                            );
+                                          return (
                                             <div
                                               key={index}
-                                              className="text-amber-500 pl-4"
+                                              className="text-white px-4"
                                             >
-                                              <div>{taste.tasteName}</div>
+                                              {tc.tasteCategoryName && (
+                                                <span>
+                                                  {tc.tasteCategoryName}
+                                                </span>
+                                              )}
+                                              ：
+                                              {matchedTastes.length > 0 ? (
+                                                matchedTastes.map(
+                                                  (tl, index) => (
+                                                    <span
+                                                      key={index}
+                                                      className="text-emerald-200 px-2"
+                                                    >
+                                                      {tl.tasteName
+                                                        ? tl.tasteName
+                                                        : "無"}
+                                                    </span>
+                                                  )
+                                                )
+                                              ) : (
+                                                <span className="text-gray-400 px-2">
+                                                  無
+                                                </span>
+                                              )}
                                             </div>
-                                          ))}
+                                          );
+                                        })}
                                       </div>
-                                    ))} */}
+                                    )}
                                   </div>
                                 </div>
                               </div>
-                              <div className="">
-                                <div className="w-full h-20 py-2 px-4 border-b-2 flex gap-2  bg-[#2c4457] overflow-y-auto scrollbar-custom ">
-                                  {comboList &&
-                                    comboList.map((item, index) => (
-                                      <div
-                                        ref={el =>
-                                          (comboItemRefs.current[index] = el)
-                                        }
-                                        key={index}
-                                        className="my-4"
-                                        onClick={() => {
-                                          setComboListClicked(index);
-                                          read_comboProducts(
-                                            item.PackageComboDataID,
-                                            item.ComboName
-                                          );
-                                          scrollToBoth(index);
-                                        }}
-                                      >
-                                        <div className="w-36 text-white  cursor-pointer">
-                                          <div
-                                            className={`${
-                                              index === comboListClicked
-                                                ? "text-orange-300 text-xl shadow-orange-300/50 shadow-inner rounded-xl"
-                                                : "hover:border-b shadow-inner"
-                                            } w-auto flex justify-center items-center  py-1`}
-                                          >
-                                            <div className="flex">
-                                              {item.ComboName}
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                </div>
-                                <div className="mt-10">
-                                  {isTasteClicked ? (
+
+                              <div className="w-full py-2 px-4 border-b-2 bg-[#2c4457]">
+                                {isTasteClicked ? (
+                                  <div>
                                     <div>
-                                      {comboProducts.length > 0 && (
+                                      {comboProducts.length > 1 && (
                                         <div>
                                           <button
-                                            className=" w-auto text-white b p-2 ml-2 border-b-2 border-b-white "
+                                            className=" w-auto text-white b p-2 ml-2 mt-4 "
                                             onClick={() =>
                                               closeTaste(comboProductID)
                                             }
@@ -1561,65 +1537,82 @@ export default function Home() {
                                         </div>
                                       )}
                                       <div className="mt-4">
-                                        {tasteCategoryList.map(
-                                          (item, index) => (
-                                            <div key={index}>
-                                              <div className="text-2xl py-2 text-rose-300 flex">
-                                                <div className=" flex">
-                                                  {item.TasteCategoryName}
+                                        {tasteCategoryList.length > 0 ? (
+                                          <div>
+                                            {tasteCategoryList.map(
+                                              (item, index) => (
+                                                <div key={index}>
+                                                  <div className="text-2xl py-2 text-rose-300 flex">
+                                                    <div className=" flex">
+                                                      {item.TasteCategoryName}
 
-                                                  {item.IsMust == 1 && (
-                                                    <div className="ml-2 flex justify-center items-center">
-                                                      <p className="text-sm">
-                                                        (必填)
-                                                      </p>
+                                                      {item.IsMust == 1 && (
+                                                        <div className="ml-2 flex justify-center items-center">
+                                                          <p className="text-sm">
+                                                            (必填)
+                                                          </p>
+                                                        </div>
+                                                      )}
                                                     </div>
-                                                  )}
+                                                  </div>
+                                                  <div className="">
+                                                    {tasteList
+                                                      .filter(
+                                                        i =>
+                                                          item.TasteCategoryID ===
+                                                          i.TasteCategoryID
+                                                      )
+                                                      .map((i, index) => (
+                                                        <div
+                                                          key={index}
+                                                          className=" flex items-center gap-3 px-4 py-4 rounded-3xl border-b-2 border-b-gray-500 cursor-pointer"
+                                                          onClick={() => {
+                                                            choseTaste(item, i);
+                                                          }}
+                                                        >
+                                                          <div
+                                                            className={`${
+                                                              choseTasteList.some(
+                                                                ctl =>
+                                                                  ctl.comboProductID ==
+                                                                    item.ProductID &&
+                                                                  ctl.tasteCategoryID ==
+                                                                    item.TasteCategoryID &&
+                                                                  ctl.tasteID ==
+                                                                    i.TasteID &&
+                                                                  ctl.comboProductIndex ==
+                                                                    comboProductIndex
+                                                              )
+                                                                ? "text-amber-500"
+                                                                : ""
+                                                            }`}
+                                                          >
+                                                            {i.TasteName}
+                                                            <p>
+                                                              NT${" "}
+                                                              {
+                                                                i.AdjustmentPrice
+                                                              }
+                                                              .
+                                                            </p>
+                                                          </div>
+                                                        </div>
+                                                      ))}
+                                                  </div>
                                                 </div>
-                                              </div>
-                                              <div className="">
-                                                {tasteList
-                                                  .filter(
-                                                    i =>
-                                                      item.TasteCategoryID ===
-                                                      i.TasteCategoryID
-                                                  )
-                                                  .map((i, index) => (
-                                                    <div
-                                                      key={index}
-                                                      className="flex items-center gap-3 px-4 py-4 rounded-3xl border-b-2 border-b-gray-500 cursor-pointer"
-                                                      onClick={() => {
-                                                        choseTaste(item, i);
-                                                      }}
-                                                    >
-                                                      <div
-                                                        className={`${
-                                                          choseTasteList.some(
-                                                            ctl =>
-                                                              ctl.comboProductID ==
-                                                                item.ProductID &&
-                                                              ctl.tasteCategoryID ==
-                                                                item.TasteCategoryID &&
-                                                              ctl.tasteID ==
-                                                                i.TasteID &&
-                                                              ctl.comboProductIndex ==
-                                                                comboProductIndex
-                                                          )
-                                                            ? "text-amber-500"
-                                                            : ""
-                                                        }`}
-                                                      >
-                                                        {i.TasteName}
-                                                        <p>
-                                                          NT${" "}
-                                                          {i.AdjustmentPrice}.
-                                                        </p>
-                                                      </div>
-                                                    </div>
-                                                  ))}
-                                              </div>
+                                              )
+                                            )}
+                                          </div>
+                                        ) : (
+                                          <div>
+                                            <div>
+                                              無口味選擇，按下{" "}
+                                              <span className="font-bold text-red-200">
+                                                完成
+                                              </span>{" "}
+                                              後選擇數量
                                             </div>
-                                          )
+                                          </div>
                                         )}
                                       </div>
                                       <div className="flex justify-center py-4">
@@ -1633,148 +1626,241 @@ export default function Home() {
                                         </button>
                                       </div>
                                     </div>
-                                  ) : (
-                                    <div>
-                                      <div className="flex flex-col gap-3 py-4 rounded-3xl cursor-pointer">
-                                        <div>
-                                          {choseComboList &&
-                                            Array.from(
-                                              /* {
-                                              length:
-                                                comboProducts[0]
-                                                  ?.ChooseItemAmount,
-                                            }, */
-                                              {
-                                                length:
-                                                  comboProducts[0]
-                                                    ?.ChooseItemAmount,
-                                              },
-                                              (_, i) => (
-                                                <div
-                                                  key={i}
-                                                  className="rounded-lg px-3 py-2 shadow-inner shadow-gray-200/50 my-4"
-                                                >
-                                                  <div className="flex text-xl py-2 text-cyan-200 justify-center item-center gap-2">
-                                                    選項 {i + 1}/
-                                                    {
-                                                      comboProducts[0]
-                                                        ?.ChooseItemAmount
-                                                    }
-                                                    {comboProducts[0]
-                                                      ?.ChooseMode === 2 && (
-                                                      <div className="flex justify-center items-center text-red-400 text-sm">
-                                                        (必選)
-                                                      </div>
-                                                    )}
+                                  </div>
+                                ) : (
+                                  <div>
+                                    {comboList &&
+                                      comboList.map((combo, index) => (
+                                        <div
+                                          ref={el =>
+                                            (comboItemRefs.current[index] = el)
+                                          }
+                                          key={index}
+                                          className="w-full my-4 border rounded-lg"
+                                          onClick={() => {
+                                            setComboListClicked(index);
+                                            read_comboProducts(
+                                              combo.PackageComboDataID,
+                                              combo.ComboName
+                                            );
+                                          }}
+                                        >
+                                          <div className="text-white  cursor-pointer">
+                                            <div
+                                              className={`${
+                                                index === comboListClicked
+                                                  ? "text-orange-300 shadow-orange-300/50 shadow-inner rounded-t-lg"
+                                                  : "hover:border-b shadow-inner"
+                                              } w-auto flex p-2`}
+                                            >
+                                              <div className="w-full flex justify-between items-center">
+                                                {combo.ComboName}
+                                                {choseComboProductList.some(
+                                                  cp =>
+                                                    cp.comboID ===
+                                                    combo?.PackageComboDataID
+                                                ) ? (
+                                                  <div className="text-green-400 text-sm">
+                                                    (已完成)
                                                   </div>
-                                                  {comboProducts.map(
-                                                    (item, index) => (
-                                                      <div
-                                                        key={index}
-                                                        className="flex border-t py-6"
-                                                      >
-                                                        <div
-                                                          className={`${
-                                                            choseComboProductList.some(
-                                                              cp =>
-                                                                cp.comboProductID ===
-                                                                  item.ProductID &&
-                                                                cp.index === i
-                                                            )
-                                                              ? "text-amber-500"
-                                                              : ""
-                                                          }`}
-                                                        >
-                                                          {item.ProductName}
-                                                          <p>
-                                                            NT$
-                                                            {item.ComboPriceMode ==
-                                                            1
-                                                              ? item.IndividPrice
-                                                              : item.OriPrice}
-                                                            .
-                                                          </p>
-                                                          {choseTasteList
-                                                            .filter(
-                                                              ctl =>
-                                                                ctl.comboProductID ==
-                                                                  item.ProductID &&
-                                                                ctl.comboProductIndex ==
-                                                                  i
-                                                            )
-                                                            .map(
-                                                              (item, index) => (
-                                                                <li
-                                                                  className=" text-gray-300 px-2"
-                                                                  key={index}
-                                                                >
-                                                                  {
-                                                                    item.tasteName
-                                                                  }
+                                                ) : combo?.ChooseMode === 2 ? (
+                                                  <div className="text-red-400 text-sm">
+                                                    (必選)
+                                                  </div>
+                                                ) : null}
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <div className="">
+                                            <div className="">
+                                              {!isTasteClicked && (
+                                                <div>
+                                                  <div className="flex flex-col gap-3 rounded-3xl cursor-pointer">
+                                                    <div>
+                                                      {index ===
+                                                        comboListClicked &&
+                                                        choseComboList &&
+                                                        Array.from(
+                                                          {
+                                                            length:
+                                                              comboProducts[0]
+                                                                ?.ChooseItemAmount,
+                                                          },
+                                                          (_, i) => (
+                                                            <div
+                                                              key={i}
+                                                              className="rounded-lg px-3 py-2 shadow-inner  my-4"
+                                                            >
+                                                              <div className="flex  text-cyan-200  item-center gap-2">
+                                                                選項 {i + 1}/
+                                                                {
+                                                                  comboProducts[0]
+                                                                    ?.ChooseItemAmount
+                                                                }
+                                                              </div>
+                                                              {comboProducts
+                                                                .filter(
+                                                                  cp =>
+                                                                    cp.PackageComboDataID ===
+                                                                    combo.PackageComboDataID
+                                                                )
+                                                                .slice(
+                                                                  0,
+                                                                  visibleCount
+                                                                )
+                                                                .map(
+                                                                  (
+                                                                    item,
+                                                                    index
+                                                                  ) => (
+                                                                    <div
+                                                                      key={
+                                                                        index
+                                                                      }
+                                                                      className="flex border-t py-6"
+                                                                    >
+                                                                      <div
+                                                                        className={`${
+                                                                          choseComboProductList.some(
+                                                                            cp =>
+                                                                              cp.comboProductID ===
+                                                                                item.ProductID &&
+                                                                              cp.index ===
+                                                                                i
+                                                                          )
+                                                                            ? "text-amber-500"
+                                                                            : ""
+                                                                        }`}
+                                                                      >
+                                                                        {
+                                                                          item.ProductName
+                                                                        }
+                                                                        <p>
+                                                                          NT$
+                                                                          {item.ComboPriceMode ==
+                                                                          1
+                                                                            ? item.IndividPrice
+                                                                            : item.OriPrice}
+                                                                          .
+                                                                        </p>
+                                                                        {choseTasteList
+                                                                          .filter(
+                                                                            ctl =>
+                                                                              ctl.comboProductID ==
+                                                                                item.ProductID &&
+                                                                              ctl.comboProductIndex ==
+                                                                                i
+                                                                          )
+                                                                          .map(
+                                                                            (
+                                                                              item,
+                                                                              index
+                                                                            ) => (
+                                                                              <li
+                                                                                className=" text-gray-300 px-2"
+                                                                                key={
+                                                                                  index
+                                                                                }
+                                                                              >
+                                                                                {
+                                                                                  item.tasteName
+                                                                                }
 
-                                                                  <p>
-                                                                    NT$
-                                                                    {
-                                                                      item?.price
-                                                                    }
-                                                                    .
-                                                                  </p>
-                                                                </li>
-                                                              )
-                                                            )}
-                                                        </div>
-                                                        <button
-                                                          className="ml-auto text-orange-100 hover:text-blue-700"
-                                                          onClick={e => {
-                                                            // e.stopPropagation() // 防止觸發外層 onClick
-                                                            scrollToBoth();
-                                                          }}
-                                                        >
-                                                          {item.ChooseMode ===
-                                                            1 &&
-                                                          choseComboProductList.some(
-                                                            cp =>
-                                                              cp.comboProductID ==
-                                                                item.ProductID &&
-                                                              cp.index == i
-                                                          ) ? (
-                                                            <div
-                                                              className="text-red-300"
-                                                              onClick={() => {
-                                                                cancelTasteAndCategory(
-                                                                  item,
-                                                                  i
-                                                                );
-                                                              }}
-                                                            >
-                                                              取消
+                                                                                <p>
+                                                                                  NT$
+                                                                                  {
+                                                                                    item?.price
+                                                                                  }
+
+                                                                                  .
+                                                                                </p>
+                                                                              </li>
+                                                                            )
+                                                                          )}
+                                                                      </div>
+                                                                      <button
+                                                                        className="ml-auto text-orange-100 hover:text-blue-700"
+                                                                        onClick={e => {
+                                                                          // e.stopPropagation() // 防止觸發外層 onClick
+                                                                          /* scrollToBoth(); */
+                                                                        }}
+                                                                      >
+                                                                        {item.ChooseMode ===
+                                                                          1 &&
+                                                                        choseComboProductList.some(
+                                                                          cp =>
+                                                                            cp.comboProductID ==
+                                                                              item.ProductID &&
+                                                                            cp.index ==
+                                                                              i
+                                                                        ) ? (
+                                                                          <div
+                                                                            className="text-red-300"
+                                                                            onClick={() => {
+                                                                              cancelTasteAndCategory(
+                                                                                item,
+                                                                                i
+                                                                              );
+                                                                            }}
+                                                                          >
+                                                                            取消
+                                                                          </div>
+                                                                        ) : (
+                                                                          <div
+                                                                            className="text-purple-200"
+                                                                            onClick={() => {
+                                                                              openTaste(
+                                                                                item,
+                                                                                i
+                                                                              );
+                                                                              scrollToBoth(
+                                                                                i,
+                                                                                comboProducts[0]
+                                                                                  ?.ChooseItemAmount
+                                                                              );
+                                                                            }}
+                                                                          >
+                                                                            選擇
+                                                                          </div>
+                                                                        )}
+                                                                      </button>
+                                                                    </div>
+                                                                  )
+                                                                )}
+                                                              {comboProducts.length >
+                                                                visibleCount && (
+                                                                <button
+                                                                  className="w-full flex justify-center items-center text-pink-200 hover:underline mt-2 "
+                                                                  onClick={() =>
+                                                                    setVisibleCount(
+                                                                      comboProducts.length
+                                                                    )
+                                                                  }
+                                                                >
+                                                                  ▼ 查看更多
+                                                                  <span>
+                                                                    (
+                                                                    {comboProducts.length -
+                                                                      visibleCount}
+                                                                    )
+                                                                  </span>
+                                                                </button>
+                                                              )}
                                                             </div>
-                                                          ) : (
-                                                            <div
-                                                              className="text-purple-200"
-                                                              onClick={() => {
-                                                                openTaste(
-                                                                  item,
-                                                                  i
-                                                                );
-                                                              }}
-                                                            >
-                                                              選擇
-                                                            </div>
-                                                          )}
-                                                        </button>
-                                                      </div>
-                                                    )
-                                                  )}
+                                                          )
+                                                        )}
+                                                    </div>
+                                                  </div>
                                                 </div>
-                                              )
-                                            )}
+                                              )}
+                                            </div>
+                                          </div>
                                         </div>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
+                                      ))}
+                                  </div>
+                                )}
                               </div>
+
                               {!isTasteClicked && (
                                 <div>
                                   <div className="flex p-4 items-center">
@@ -1865,6 +1951,7 @@ export default function Home() {
                               } max-w-full h-12 p-2 m-2 text-nowrap cursor-pointer shadow-inner shadow-white rounded-2xl`}
                               onClick={() => {
                                 setMenuTypeClicked(index);
+                                fetchMenuTypeList(item.product_type_id);
                                 if (menuItemRefs.current[index]) {
                                   menuItemRefs.current[index].scrollIntoView({
                                     behavior: "smooth",
@@ -1880,10 +1967,7 @@ export default function Home() {
                                     ? "border-b text-red-200"
                                     : "hover:border-b"
                                 }`}
-                                onClick={() => {
-                                  setMenuTypeClicked(index);
-                                  fetchMenuTypeList(item.product_type_id);
-                                }}
+                                onClick={() => {}}
                               >
                                 {item.product_type_name}
                               </div>
@@ -1912,7 +1996,7 @@ export default function Home() {
                                         ? `data:image/jpg;base64,${Buffer.from(
                                             item.product_images
                                           ).toString("base64")}`
-                                        : "/CAFELUX_ICON-1.png" // 替換為你的預設圖片路徑
+                                        : "/CAFELUX_ICON-2.png"
                                     }
                                     alt="productImage"
                                     className="rounded-xl w-40 h-40"
@@ -1926,7 +2010,6 @@ export default function Home() {
                     )}
                   </div>
                 )}
-
                 <div ref={menuNavRef} className="h-[200px]"></div>
               </div>
             )}
