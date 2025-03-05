@@ -161,6 +161,7 @@ export default function Home() {
       const data = await res.json();
       if (data.PackageDataID != null) {
         fetchComboList(data.PackageDataID);
+        setProductPrice(0);
       } else {
         setProductPrice(data.Price);
         fetchProductTasteCategory(product_id);
@@ -1952,14 +1953,14 @@ export default function Home() {
                                         className="w-2/3 rounded-full bg-slate-800 hover:bg-slate-900"
                                         onClick={edit_shopCart}
                                       >
-                                        更新購物車 小計: {unitPrice}
+                                        更新購物車 小計: {count * unitPrice}
                                       </button>
                                     ) : (
                                       <button
                                         className="w-2/3 rounded-full bg-slate-800 hover:bg-slate-900"
                                         onClick={add_shopCart}
                                       >
-                                        新增至購物車 小計: {unitPrice}
+                                        新增至購物車 小計: {count * unitPrice}
                                       </button>
                                     )}
                                   </div>
