@@ -8,14 +8,42 @@ import { MdEdit } from "react-icons/md";
 
 export default function Home() {
   const [isShaking, setIsShaking] = useState(false);
-  // 預約者姓名
-  const [inputName, setInputName] = useState("張");
-  const [inputTel, setInputTel] = useState("0912345678");
+  // 預約者
+  const getDefaultReservation = () => ({
+    name: "",
+    phone: "",
+    adults_num: 1,
+    childs_num: 0,
+    reserve_date: "",
+    reserve_time: "",
+  });
+
+  const getSessionValue = () => {
+    if (typeof window !== "undefined") {
+      const storedReservation = sessionStorage.getItem("reservation");
+      return storedReservation
+        ? JSON.parse(storedReservation)
+        : getDefaultReservation();
+    }
+    return getDefaultReservation(); // 伺服器端回傳固定值，避免 Hydration Mismatch
+  };
+
+  // 先用預設值初始化 useState，確保伺服器端和瀏覽器端一致
+  const [inputName, setInputName] = useState(getDefaultReservation().name);
+  const [inputTel, setInputTel] = useState(getDefaultReservation().phone);
   const [TelIsValid, setTelIsValid] = useState(true);
-  const [adultsNum, setAdultsNum] = useState(1);
-  const [childrenNum, setChildrenNum] = useState(0);
-  const [reserveDate, setReserveDate] = useState("0304");
-  const [reserveTime, setReserveTime] = useState("1530");
+  const [adultsNum, setAdultsNum] = useState(
+    getDefaultReservation().adults_num
+  );
+  const [childrenNum, setChildrenNum] = useState(
+    getDefaultReservation().childs_num
+  );
+  const [reserveDate, setReserveDate] = useState(
+    getDefaultReservation().reserve_date
+  );
+  const [reserveTime, setReserveTime] = useState(
+    getDefaultReservation().reserve_time
+  );
 
   const [menuGroupList, setMenuGroupList] = useState([]);
   const [menuTypeClicked, setMenuTypeClicked] = useState(0);
@@ -39,18 +67,27 @@ export default function Home() {
   const [choseProduct, setChoseProduct] = useState();
 
   const [count, setCount] = useState(0);
-  const [totalPrice, setTotalPrice] = useState(0);
+  const [unitPrice, setUnitPrice] = useState(0);
   const [productPrice, setProductPrice] = useState(0);
   const [ctPrice, setCtPrice] = useState(0);
   const [cpPrice, setCpPrice] = useState(0);
   const [shopCartPrice, setShopCartPrice] = useState(0);
-  const [shopCartList, setShopCartList] = useState([]);
+  const defaultShopCartList = [];
+  const getSessionShopCartList = () => {
+    if (typeof window !== "undefined") {
+      const storedCart = sessionStorage.getItem("shopCartList");
+      return storedCart ? JSON.parse(storedCart) : defaultShopCartList;
+    }
+    return  ; // SSR 環境回傳固定值
+  };
+  
+  const [shopCartList, setShopCartList] = useState(getSessionShopCartList());
   const [isEditShopCart, setIsEditShopCart] = useState(false);
   const [editShop, setEditShop] = useState(false);
   const [shopCartIndex, setShopCartIndex] = useState(false);
   const [shopCartCount, setShopCartCount] = useState(null);
   const [isShowMain, setIsShowMain] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(5); // 預設顯示5筆
+  const [visibleCount, setVisibleCount] = useState(5);
 
   const targetRef = useRef(null);
   const menuItemRefs = useRef([]);
@@ -251,7 +288,7 @@ export default function Home() {
           item =>
             !(
               item.comboProductID === productID &&
-              item.index === comboProductIndex
+              item.comboProductIndex === comboProductIndex
             )
         )
       );
@@ -292,7 +329,9 @@ export default function Home() {
 
       /* const isMaxLimitReached = filteredItems.length >= ChooseItemAmount */
       const isExist = filteredItems.some(
-        item => item.comboProductID === ProductID && item.index === itemIndex
+        item =>
+          item.comboProductID === ProductID &&
+          item.comboProductIndex === itemIndex
       );
 
       let updatedList = prevList;
@@ -308,7 +347,7 @@ export default function Home() {
             comboID: PackageComboDataID,
             comboProductID: ProductID,
             comboProductName: ProductName,
-            index: itemIndex,
+            comboProductIndex: itemIndex,
             chooseMode: 2,
             price: ComboPriceMode === 1 ? IndividPrice : OriPrice,
           },
@@ -320,7 +359,10 @@ export default function Home() {
         if (isExist) {
           updatedList = prevList.filter(
             item =>
-              !(item.comboProductID === ProductID && item.index === itemIndex)
+              !(
+                item.comboProductID === ProductID &&
+                item.comboProductIndex === itemIndex
+              )
           );
         } else {
           updatedList = [
@@ -328,14 +370,14 @@ export default function Home() {
               item =>
                 !(
                   item.comboID === PackageComboDataID &&
-                  item.index === itemIndex
+                  item.comboProductIndex === itemIndex
                 )
             ),
             {
               comboID: PackageComboDataID,
               comboProductID: ProductID,
               comboProductName: ProductName,
-              index: itemIndex,
+              comboProductIndex: itemIndex,
               chooseMode: 1,
               price: ComboPriceMode === 1 ? IndividPrice : OriPrice,
             },
@@ -386,7 +428,7 @@ export default function Home() {
           !(
             item.comboID === comboProducts[0].PackageComboDataID &&
             item.comboProductID === data.ProductID &&
-            item.index === itemIndex
+            item.comboProductIndex === itemIndex
           )
       )
     );
@@ -741,7 +783,7 @@ export default function Home() {
         tasteCategory: choseTasteCategory,
         tasteList: choseTasteList,
         quantity: count,
-        totalPrice: totalPrice,
+        unitPrice: unitPrice,
       },
     ]);
     // 清空
@@ -766,7 +808,7 @@ export default function Home() {
         tasteCategory: choseTasteCategory,
         tasteList: choseTasteList,
         quantity: count,
-        totalPrice: totalPrice,
+        unitPrice: unitPrice,
       };
       return updatedList;
     });
@@ -810,9 +852,18 @@ export default function Home() {
     }
     setIsShowMain(!isShowMain);
     fetchReserveMenu();
+    const reservation = {
+      name: inputName,
+      phone: inputTel,
+      adults_num: adultsNum,
+      childs_num: childrenNum,
+      reserve_date: reserveDate,
+      reserve_time: reserveTime,
+    };
+    sessionStorage.setItem("reservation", JSON.stringify(reservation));
   };
   const submit_reserve = () => {
-    console.log(shopCartList, 'shopCartList')
+    console.log(shopCartList, "shopCartList");
   };
 
   const editItem = (data, shopCartIndex) => {
@@ -917,6 +968,8 @@ export default function Home() {
       0
     );
     setShopCartCount(totalQuantity);
+    const shopCart = shopCartList;
+    sessionStorage.setItem("shopCartList", JSON.stringify(shopCart));
   }, [shopCartList]);
 
   useEffect(() => {
@@ -927,6 +980,17 @@ export default function Home() {
       });
     }
   }, [tasteCategoryList]);
+
+  useEffect(() => {
+    setShopCartList(getSessionShopCartList());
+    const sessionData = getSessionValue();
+    setInputName(sessionData.name);
+    setInputTel(sessionData.phone);
+    setAdultsNum(sessionData.adults_num);
+    setChildrenNum(sessionData.childs_num);
+    setReserveDate(sessionData.reserve_date);
+    setReserveTime(sessionData.reserve_time);
+  }, []);
 
   useEffect(() => {
     const newCtPrice = choseTasteList.reduce(
@@ -945,12 +1009,12 @@ export default function Home() {
   }, [choseComboProductList]);
 
   useEffect(() => {
-    setTotalPrice(productPrice + ctPrice + cpPrice);
+    setUnitPrice(productPrice + ctPrice + cpPrice);
   }, [ctPrice, cpPrice, productPrice]);
 
   useEffect(() => {
     const newShopCartPrice = shopCartList.reduce(
-      (sum, product) => sum + product.totalPrice * product.quantity,
+      (sum, product) => sum + product.unitPrice * product.quantity,
       0
     );
     setShopCartPrice(newShopCartPrice);
@@ -1072,7 +1136,7 @@ export default function Home() {
                                                     tc.comboProductID ===
                                                       cpl.comboProductID &&
                                                     tc.comboProductIndex ===
-                                                      cpl.index
+                                                      cpl.comboProductIndex
                                                 )
                                                 .map((tc, index) => {
                                                   const matchedTastes =
@@ -1198,7 +1262,7 @@ export default function Home() {
                                   ＋
                                 </button>
                               </div>
-                              <div>金額: {item.quantity * item.totalPrice}</div>
+                              <div>金額: {item.quantity * item.unitPrice}</div>
 
                               <div
                                 className="flex items-center gap-1 cursor-pointer"
@@ -1428,7 +1492,7 @@ export default function Home() {
                         className="w-full h-auto rounded-xl border p-2 hover:bg-slate-900"
                         onClick={() => {
                           show_main();
-                          handleMenuNavScroll();
+                          // handleMenuNavScroll();
                         }}
                       >
                         前往預定
@@ -1725,7 +1789,7 @@ export default function Home() {
                                                                             cp =>
                                                                               cp.comboProductID ===
                                                                                 item.ProductID &&
-                                                                              cp.index ===
+                                                                              cp.comboProductIndex ===
                                                                                 i
                                                                           )
                                                                             ? "text-amber-500"
@@ -1791,7 +1855,7 @@ export default function Home() {
                                                                           cp =>
                                                                             cp.comboProductID ==
                                                                               item.ProductID &&
-                                                                            cp.index ==
+                                                                            cp.comboProductIndex ==
                                                                               i
                                                                         ) ? (
                                                                           <div
@@ -1887,14 +1951,14 @@ export default function Home() {
                                         className="w-2/3 rounded-full bg-slate-800 hover:bg-slate-900"
                                         onClick={edit_shopCart}
                                       >
-                                        更新購物車 小計: {totalPrice}
+                                        更新購物車 小計: {unitPrice}
                                       </button>
                                     ) : (
                                       <button
                                         className="w-2/3 rounded-full bg-slate-800 hover:bg-slate-900"
                                         onClick={add_shopCart}
                                       >
-                                        新增至購物車 小計: {totalPrice}
+                                        新增至購物車 小計: {unitPrice}
                                       </button>
                                     )}
                                   </div>
