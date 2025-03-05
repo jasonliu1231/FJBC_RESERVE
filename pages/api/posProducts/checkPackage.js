@@ -8,7 +8,8 @@ export default async function handler(req, res) {
       SELECT 
         p.ProductID,
         p.ProductName,
-        p.PackageDataID
+        p.PackageDataID,
+        p.Price
         --mt.MenuTypeName
       FROM Products p
       --INNER JOIN MenuItem mi ON mi.ProductID = p.ProductID

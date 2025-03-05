@@ -78,9 +78,9 @@ export default function Home() {
       const storedCart = sessionStorage.getItem("shopCartList");
       return storedCart ? JSON.parse(storedCart) : defaultShopCartList;
     }
-    return  ; // SSR 環境回傳固定值
+    return; // SSR 環境回傳固定值
   };
-  
+
   const [shopCartList, setShopCartList] = useState(getSessionShopCartList());
   const [isEditShopCart, setIsEditShopCart] = useState(false);
   const [editShop, setEditShop] = useState(false);
@@ -162,7 +162,7 @@ export default function Home() {
       if (data.PackageDataID != null) {
         fetchComboList(data.PackageDataID);
       } else {
-        setProductPrice(product.price);
+        setProductPrice(data.Price);
         fetchProductTasteCategory(product_id);
         fetchTasteName(product_id);
         setIsTasteClicked(!isTasteClicked);
@@ -272,6 +272,7 @@ export default function Home() {
     setChoseComboProductList([]);
     setChoseTasteCategory([]);
     setChoseTasteList([]);
+    setEditShop(false)
   };
 
   const closeTaste = async productID => {
@@ -832,7 +833,7 @@ export default function Home() {
         showWarningAlert("請輸入有效的電話號碼");
         return;
       }
-      if (adultsNum < 1) {
+      if (adultsNum < 1 || childrenNum < 0) {
         showWarningAlert("請輸入人數");
         return;
       }
@@ -982,8 +983,8 @@ export default function Home() {
   }, [tasteCategoryList]);
 
   useEffect(() => {
-    setShopCartList(getSessionShopCartList());
     const sessionData = getSessionValue();
+    setShopCartList(getSessionShopCartList());
     setInputName(sessionData.name);
     setInputTel(sessionData.phone);
     setAdultsNum(sessionData.adults_num);
