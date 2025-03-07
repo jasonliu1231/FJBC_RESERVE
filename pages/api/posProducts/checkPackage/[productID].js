@@ -5,15 +5,15 @@ export default async function handler(req, res) {
   try {
     const { productID } = req.query
     const query = `
-      SELECT 
+      SELECT
         p.ProductID,
         p.ProductName,
         p.PackageDataID,
-        p.Price
-        --mt.MenuTypeName
+        p.Price,
+        mt.MenuTypeName
       FROM Products p
-      --INNER JOIN MenuItem mi ON mi.ProductID = p.ProductID
-      --INNER JOIN MenuType mt ON mi.MenuTypeID = mt.MenuTypeID
+      INNER JOIN MenuItem mi ON mi.ProductID = p.ProductID
+      INNER JOIN MenuType mt ON mi.MenuTypeID = mt.MenuTypeID
       WHERE p.ProductID = @productID
     `
     const result = await pool_pos

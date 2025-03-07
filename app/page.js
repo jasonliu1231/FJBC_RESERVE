@@ -137,9 +137,7 @@ export default function Home() {
 
   const fetchMenuTypeList = async product_type_id => {
     try {
-      const res = await fetch(
-        `/api/reserveMenu/typeList?productTypeId=${product_type_id}`
-      );
+      const res = await fetch(`/api/reserveMenu/typeList/${product_type_id}`);
       if (!res.ok) {
         throw new Error(`HTTP error! Status: ${res.status}`);
       }
@@ -152,9 +150,7 @@ export default function Home() {
   const fetchMenuInfo = async product => {
     const product_id = product.product_id;
     try {
-      const res = await fetch(
-        `/api/posProducts/checkPackage?productID=${product_id}`
-      );
+      const res = await fetch(`/api/posProducts/checkPackage/${product_id}`);
       if (!res.ok) {
         throw new Error(`HTTP error! Status: ${res.status}`);
       }
@@ -183,9 +179,7 @@ export default function Home() {
   };
   const fetchComboList = async packageDataID => {
     try {
-      const res = await fetch(
-        `/api/posProducts/comboList?packageDataID=${packageDataID}`
-      );
+      const res = await fetch(`/api/posProducts/comboList/${packageDataID}`);
       if (!res.ok) {
         throw new Error(`HTTP error! Status: ${res.status}`);
       }
@@ -200,7 +194,7 @@ export default function Home() {
   const fetchComboProducts = async packageComboDataID => {
     try {
       const res = await fetch(
-        `/api/posProducts/comboProducts?packageComboDataID=${packageComboDataID}`
+        `/api/posProducts/comboProducts/${packageComboDataID}`
       );
       if (!res.ok) {
         console.error(res.error);
@@ -213,9 +207,7 @@ export default function Home() {
   };
   const fetchProductTasteCategory = async product_id => {
     try {
-      const res = await fetch(
-        `/api/posProducts/checkTaste?productID=${product_id}`
-      );
+      const res = await fetch(`/api/posProducts/checkTaste/${product_id}`);
       if (!res.ok) {
         throw new Error(`HTTP error! Status: ${res.status}`);
       }
@@ -231,9 +223,7 @@ export default function Home() {
   };
   const fetchTasteName = async product_id => {
     try {
-      const res = await fetch(
-        `/api/posProducts/tasteName?productID=${product_id}`
-      );
+      const res = await fetch(`/api/posProducts/tasteName/${product_id}`);
       if (!res.ok) {
         throw new Error(`HTTP error! Status: ${res.status}`);
       }
@@ -273,7 +263,7 @@ export default function Home() {
     setChoseComboProductList([]);
     setChoseTasteCategory([]);
     setChoseTasteList([]);
-    setEditShop(false)
+    setEditShop(false);
   };
 
   const closeTaste = async productID => {
@@ -864,8 +854,64 @@ export default function Home() {
     };
     sessionStorage.setItem("reservation", JSON.stringify(reservation));
   };
-  const submit_reserve = () => {
-    console.log(shopCartList, "shopCartList");
+  const submit_reserve = async () => {
+    Swal.fire({
+      title: "確定送出?",
+      text: "如有任何問題歡迎致電，將有人為您服務!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "確認",
+      cancelButtonText: "取消",
+    }).then(async result => {
+      if (result.isConfirmed) {
+        await send_order();
+      }
+    });
+  };
+  const send_order = async () => {
+    const requestData = {
+      shopCartList: shopCartList,
+      order: {
+        name: inputName,
+        phone: inputTel,
+        adults_num: adultsNum,
+        childs_num: childrenNum,
+        reserve_date: reserveDate,
+        reserve_time: reserveTime,
+      },
+    };
+    const config = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestData),
+    };
+    const response = await fetch(`/api/reserveMenu/submit`, config);
+    const res = await response.json();
+    if (response.ok) {
+      Swal.fire({
+        title: "成功!",
+        icon: "success",
+        showCancelButton: false,
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "完成",
+      }).then(result => {
+        if (result.isConfirmed) {
+          sessionStorage.removeItem("shopCartList");
+          sessionStorage.removeItem("reservation");
+          window.location.href = "/";
+        }
+      });
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "發生錯誤!",
+        text: "請稍後再試或致電將有人為您服務",
+      });
+    }
   };
 
   const editItem = (data, shopCartIndex) => {
@@ -931,6 +977,7 @@ export default function Home() {
       }
     });
   };
+
   const showWarningAlert = (title, text) => {
     Swal.fire({
       title: title,

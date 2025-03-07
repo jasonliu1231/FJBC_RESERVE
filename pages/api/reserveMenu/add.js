@@ -1,4 +1,4 @@
-import pool_pg from "@/lib/pgdb"
+import pool_pg from "@/lib/pgdb";
 
 export default async function handler(req, res) {
   switch (req.method) {
@@ -12,17 +12,19 @@ export default async function handler(req, res) {
         mt_OrderKey,
         mi_OrderKey,
         Price,
-      } = req.body
-      
-      const imageBuffer = ProductImages ? Buffer.from(ProductImages, "base64") : null; // 轉換為 Buffer
-      try {
-        await pool_pg.query("BEGIN")
+      } = req.body;
 
-        const check = ` SELECT 1 FROM reserve_menu WHERE product_id = $1`
-        const result = await pool_pg.query(check, [ProductID])
+      const imageBuffer = ProductImages
+        ? Buffer.from(ProductImages, "base64")
+        : null; // 轉換為 Buffer
+      try {
+        await pool_pg.query("BEGIN");
+
+        const check = ` SELECT 1 FROM reserve_menu WHERE product_id = $1`;
+        const result = await pool_pg.query(check, [ProductID]);
         if (result.rows.length > 0) {
-          const sql = ` DELETE  FROM reserve_menu WHERE product_id = $1`
-          await pool_pg.query(sql, [ProductID])
+          const sql = ` DELETE  FROM reserve_menu WHERE product_id = $1`;
+          await pool_pg.query(sql, [ProductID]);
         } else {
           const sql = `
             INSERT INTO reserve_menu(
@@ -36,7 +38,7 @@ export default async function handler(req, res) {
               price
             ) 
             VALUES($1, $2, $3, $4, $5, $6, $7, $8)
-          `
+          `;
           const params = [
             ProductID,
             ProductName,
@@ -46,20 +48,20 @@ export default async function handler(req, res) {
             mi_OrderKey,
             imageBuffer,
             Price,
-          ]
-          await pool_pg.query(sql, params)
+          ];
+          await pool_pg.query(sql, params);
         }
 
-        await pool_pg.query("COMMIT")
-        res.status(200).json({ message: "Operation successful" })
+        await pool_pg.query("COMMIT");
+        res.status(200).json({ message: "Operation successful" });
       } catch (error) {
-        await pool_pg.query("ROLLBACK")
-        console.error("Error fetching products:", error)
-        res.status(500).json({ error: "Failed to fetch products" })
+        await pool_pg.query("ROLLBACK");
+        console.error("Error fetching products:", error);
+        res.status(500).json({ error: "Failed to fetch products" });
       }
-      break
+      break;
     default:
-      res.status(405).json({ error: "Method not allowed" })
-      break
+      res.status(405).json({ error: "Method not allowed" });
+      break;
   }
 }
