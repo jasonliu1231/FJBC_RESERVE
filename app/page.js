@@ -863,7 +863,9 @@ export default function Home() {
         預約人數: ${adultsNum} 位成人 + ${childrenNum} 位小孩 <br>
         預約日期及時間: ${reserveDate} ${reserveTime} <br><br>
         請確認您的預約內容與預約時間後，按下確認送出。<br>
-        如有任何問題歡迎致電，將有人為您服務!
+        如有任何問題歡迎致電，將有人為您服務!<br>
+        電話: 0423954922#7101<br>
+        地址: 411台中市太平區新興路167號<br>
       `,
       icon: "warning",
       showCancelButton: true,
@@ -916,7 +918,7 @@ export default function Home() {
       Swal.fire({
         icon: "error",
         title: "發生錯誤!",
-        text: "請稍後再試或致電將有人為您服務",
+        text: "請稍後再試或致電將有人為您服務 電話: 0423954922#7101",
       });
     }
   };
@@ -1379,6 +1381,10 @@ export default function Home() {
                       ​一道美食 » 一生難忘
                       <br />
                       每一口都是精心準備的驚喜。無論是與家人共進晚餐，或是與朋友小聚，將成為您珍貴回憶的一部分。
+                      <br />
+                      電話: 0423954922#7101
+                      <br />
+                      地址: 411台中市太平區新興路167號
                     </div>
                   </div>
                 )}
