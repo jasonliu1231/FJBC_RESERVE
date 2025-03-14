@@ -857,7 +857,14 @@ export default function Home() {
   const submit_reserve = async () => {
     Swal.fire({
       title: "確定送出?",
-      text: "如有任何問題歡迎致電，將有人為您服務!",
+      html: `
+        預約姓名: ${inputName} <br>
+        預約電話: ${inputTel} <br>
+        預約人數: ${adultsNum} 位成人 + ${childrenNum} 位小孩 <br>
+        預約日期及時間: ${reserveDate} ${reserveTime} <br><br>
+        請確認您的預約內容與預約時間後，按下確認送出。<br>
+        如有任何問題歡迎致電，將有人為您服務!
+      `,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
@@ -872,7 +879,7 @@ export default function Home() {
   };
   const send_order = async () => {
     const requestData = {
-      shopCartList: shopCartList,
+      shopCartList: shopCartList ? shopCartList : [],
       order: {
         name: inputName,
         phone: inputTel,
@@ -1441,6 +1448,12 @@ export default function Home() {
                         </span>
                         <div className=" animate-bounce">↓</div>
                       </div>
+                      <button
+                        className="w-full h-auto rounded-xl border p-2 hover:bg-slate-900 my-2"
+                        onClick={submit_reserve}
+                      >
+                        無需預定餐點，可直接訂位
+                      </button>
                     </div>
                   </div>
                 ) : (
